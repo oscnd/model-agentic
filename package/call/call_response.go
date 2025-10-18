@@ -1,20 +1,15 @@
 package call
 
 type Response struct {
-	ID      string    `json:"id,omitempty"`
-	Model   string    `json:"model"`
-	Choices []*Choice `json:"choices"`
-	Usage   *Usage    `json:"usage,omitempty"`
-}
-
-type Choice struct {
-	Index        int     `json:"index"`
-	Message      Message `json:"message"`
-	FinishReason string  `json:"finishReason"`
+	Id           string   `json:"id,omitempty"`
+	Model        string   `json:"model"`
+	FinishReason string   `json:"finishReason"`
+	Message      *Message `json:"message"`
+	Usage        *Usage   `json:"usage,omitempty"`
 }
 
 type Usage struct {
-	PromptTokens     *int `json:"promptTokens,omitempty"`
-	CompletionTokens *int `json:"completionTokens,omitempty"`
-	TotalTokens      *int `json:"totalTokens,omitempty"`
+	InputTokens  *int `json:"inputTokens,omitempty"`
+	OutputTokens *int `json:"outputTokens,omitempty"`
+	CachedTokens *int `json:"cachedTokens,omitempty"`
 }
