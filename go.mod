@@ -1,16 +1,16 @@
-module go.scnd.dev/model/agentic
+module go.scnd.dev/open/model-agentic
 
 go 1.24.4
 
 require (
+	github.com/anthropics/anthropic-sdk-go v1.14.0
 	github.com/bsthun/gut v1.2.7
+	github.com/davecgh/go-spew v1.1.1
 	github.com/openai/openai-go v1.12.0
 	github.com/stretchr/testify v1.8.4
 )
 
 require (
-	github.com/anthropics/anthropic-sdk-go v1.14.0 // indirect
-	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.10 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
