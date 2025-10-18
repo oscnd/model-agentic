@@ -71,13 +71,8 @@ func TestCallMagicNumber(t *testing.T) {
 		}
 
 		// * add functions
-		functionCall.AddFunction(getMagicNumberDeclaration)
-		functionCall.AddFunction(checkNumberDeclaration)
-
-		// * assert functions were added
-		assert.Equal(t, 2, len(functionCall.Declarations))
-		assert.Equal(t, "get_magic_number", *functionCall.Declarations[0].Name)
-		assert.Equal(t, "check_number", *functionCall.Declarations[1].Name)
+		functionCall.AddDeclaration(getMagicNumberDeclaration)
+		functionCall.AddDeclaration(checkNumberDeclaration)
 
 		// * create request to call the function
 		maxTokens := 300
@@ -96,7 +91,7 @@ func TestCallMagicNumber(t *testing.T) {
 
 		// * call function with callback to track invocations
 		var invocations []*CallbackInvoke
-		response, err := functionCall.CallFunction(request, new(call.Option), nil, func(invoke *CallbackInvoke) {
+		response, err := functionCall.Call(request, new(call.Option), nil, func(invoke *CallbackInvoke) {
 			invocations = append(invocations, invoke)
 		})
 

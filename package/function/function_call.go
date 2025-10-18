@@ -9,26 +9,26 @@ import (
 
 type Caller interface {
 	Call(request *Request, option *call.Option, output any, callback func(invoke *CallbackInvoke)) (*call.Response, *gut.ErrorInstance)
-	AddFunction(declaration *Declaration)
+	AddDeclaration(declaration *Declaration)
 }
 
 type Call struct {
-	Call         call.Caller    `json:"-"`
+	Caller       call.Caller    `json:"-"`
 	Declarations []*Declaration `json:"declarations"`
 }
 
-func New(call call.Caller) *Call {
+func New(caller call.Caller) Caller {
 	return &Call{
-		Call:         call,
+		Caller:       caller,
 		Declarations: []*Declaration{},
 	}
 }
 
-func (c *Call) AddFunction(declaration *Declaration) {
+func (c *Call) AddDeclaration(declaration *Declaration) {
 	c.Declarations = append(c.Declarations, declaration)
 }
 
-func (c *Call) CallFunction(request *Request, option *call.Option, output any, callback func(invoke *CallbackInvoke)) (*call.Response, *gut.ErrorInstance) {
+func (c *Call) Call(request *Request, option *call.Option, output any, callback func(invoke *CallbackInvoke)) (*call.Response, *gut.ErrorInstance) {
 	// * convert function request to call request by appending function declarations as tools
 	callRequest := &call.Request{
 		Model:       request.Model,
@@ -43,7 +43,7 @@ func (c *Call) CallFunction(request *Request, option *call.Option, output any, c
 	// * loop until no more tool calls
 	for {
 		// * call underlying caller
-		response, err := c.Call.Call(callRequest, option, output)
+		response, err := c.Caller.Call(callRequest, option, output)
 		if err != nil {
 			return nil, err
 		}
@@ -54,7 +54,7 @@ func (c *Call) CallFunction(request *Request, option *call.Option, output any, c
 		}
 
 		// * process each tool call
-
+		toolCalls := make([]*call.ToolCall, 0)
 		for _, toolCall := range response.Message.ToolCalls {
 			// * find matching declaration
 			declaration := c.GetDeclaration(toolCall.Name)
@@ -102,18 +102,18 @@ func (c *Call) CallFunction(request *Request, option *call.Option, output any, c
 
 			// * create tool result message
 			toolCall.Result = responseJSON
-			toolMessage := &call.Message{
-				Role:    gut.Ptr("tool"),
-				Content: nil,
-				Images:  nil,
-				ToolCalls: []*call.ToolCall{
-					toolCall,
-				},
-			}
-
-			// * append tool result message
-			callRequest.Messages = append(callRequest.Messages, toolMessage)
+			toolCalls = append(toolCalls, toolCall)
 		}
+
+		toolMessage := &call.Message{
+			Role:      gut.Ptr("tool"),
+			Content:   nil,
+			Images:    nil,
+			ToolCalls: toolCalls,
+		}
+
+		// * append tool result message
+		callRequest.Messages = append(callRequest.Messages, toolMessage)
 	}
 }
 

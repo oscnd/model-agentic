@@ -45,7 +45,7 @@ func TestMcpDeclarations(t *testing.T) {
 
 		// * add all mcp declarations to function call
 		for _, declaration := range declarations {
-			functionCall.AddFunction(declaration)
+			functionCall.AddDeclaration(declaration)
 		}
 
 		// * create request to search for package name
@@ -68,7 +68,7 @@ func TestMcpDeclarations(t *testing.T) {
 		var finalResponse string
 
 		// * call function
-		response, callErr := functionCall.CallFunction(request, new(call.Option), nil, func(invoke *CallbackInvoke) {
+		response, callErr := functionCall.Call(request, new(call.Option), nil, func(invoke *CallbackInvoke) {
 			invocations = append(invocations, invoke)
 		})
 

@@ -294,13 +294,15 @@ func (r *Openai) RequestToTools(tools []*Tool) []openai.ChatCompletionToolParam 
 func (r *Openai) ChatCompletionToolCallToToolCall(toolCall openai.ChatCompletionMessageToolCall) *ToolCall {
 	typeStr := string(toolCall.Type)
 	result := &ToolCall{
-		Id:   &toolCall.ID,
-		Type: &typeStr,
+		Id:        &toolCall.ID,
+		Type:      &typeStr,
+		Name:      nil,
+		Arguments: nil,
+		Result:    nil,
 	}
 
 	if toolCall.Function.Name != "" {
-		name := toolCall.Function.Name
-		result.Name = &name
+		result.Name = &toolCall.Function.Name
 		result.Arguments = []byte(toolCall.Function.Arguments)
 	}
 

@@ -69,8 +69,8 @@ func main() {
 	}
 
 	// * add functions
-	functionCall.AddFunction(getMagicNumberDeclaration)
-	functionCall.AddFunction(checkNumberDeclaration)
+	functionCall.AddDeclaration(getMagicNumberDeclaration)
+	functionCall.AddDeclaration(checkNumberDeclaration)
 
 	// * create request to call the function
 	request := &function.Request{
@@ -87,7 +87,7 @@ func main() {
 
 	// * call function with callback to track invocations
 	var invocations []*function.CallbackInvoke
-	response, err := functionCall.CallFunction(request, new(call.Option), nil, func(invoke *function.CallbackInvoke) {
+	response, err := functionCall.Call(request, new(call.Option), nil, func(invoke *function.CallbackInvoke) {
 		invocations = append(invocations, invoke)
 	})
 	if err != nil {
