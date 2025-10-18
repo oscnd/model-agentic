@@ -11,6 +11,6 @@ type ToolCall struct {
 	Id        *string `json:"id"`
 	Type      *string `json:"type"`
 	Name      *string `json:"name,omitempty"`
-	Arguments any     `json:"arguments,omitempty"`
-	Output    any     `json:"output,omitempty"`
+	Arguments []byte  `json:"arguments,omitempty"`
+	Result    []byte  `json:"output,omitempty"`
 }

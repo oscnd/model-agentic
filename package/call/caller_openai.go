@@ -139,12 +139,8 @@ func (r *Openai) RequestToMessages(request *Request) []openai.ChatCompletionMess
 		case "assistant":
 			messages = append(messages, r.AssistantMessageToChatParam(msg))
 		case "tool":
-			if msg.ToolCallId != nil {
-				content := ""
-				if msg.Content != nil {
-					content = *msg.Content
-				}
-				messages = append(messages, openai.ToolMessage(*msg.ToolCallId, content))
+			for _, toolCall := range msg.ToolCalls {
+				messages = append(messages, openai.ToolMessage(fmt.Sprintf("Name: %s, Request %s, Response: %s", *toolCall.Name, toolCall.Arguments, toolCall.Result), *toolCall.Id))
 			}
 		}
 	}
@@ -305,13 +301,7 @@ func (r *Openai) ChatCompletionToolCallToToolCall(toolCall openai.ChatCompletion
 	if toolCall.Function.Name != "" {
 		name := toolCall.Function.Name
 		result.Name = &name
-
-		if toolCall.Function.Arguments != "" {
-			var args any
-			if err := json.Unmarshal([]byte(toolCall.Function.Arguments), &args); err == nil {
-				result.Arguments = args
-			}
-		}
+		result.Arguments = []byte(toolCall.Function.Arguments)
 	}
 
 	return result

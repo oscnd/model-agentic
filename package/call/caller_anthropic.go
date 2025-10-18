@@ -124,12 +124,8 @@ func (r *Anthropic) RequestToMessages(request *Request) []anthropic.MessageParam
 			messages = append(messages, r.AssistantMessageToMessageParam(msg))
 		case "tool":
 			// * tool results are added as user messages in anthropic
-			if msg.ToolCallId != nil {
-				content := ""
-				if msg.Content != nil {
-					content = *msg.Content
-				}
-				toolResultBlock := anthropic.NewToolResultBlock(*msg.ToolCallId, content, false)
+			for _, toolCall := range msg.ToolCalls {
+				toolResultBlock := anthropic.NewToolResultBlock(*toolCall.Id, fmt.Sprintf("Name: %s, Request %s, Response: %s", *toolCall.Name, toolCall.Arguments, toolCall.Result), false)
 				messages = append(messages, anthropic.NewUserMessage(toolResultBlock))
 			}
 		}
@@ -198,7 +194,7 @@ func (r *Anthropic) AssistantMessageToMessageParam(message *Message) anthropic.M
 
 func (r *Anthropic) ToolCallToToolUseBlock(toolCall *ToolCall) anthropic.ContentBlockParamUnion {
 	name := ""
-	input := any(nil)
+	input := make([]byte, 0)
 
 	if toolCall.Name != nil {
 		name = *toolCall.Name
@@ -240,12 +236,10 @@ func (r *Anthropic) MessageToResponse(message *anthropic.Message, output any) *R
 func (r *Anthropic) MessageContentToMessage(message *anthropic.Message, output any) *Message {
 	role := "assistant"
 	result := &Message{
-		Role:       &role,
-		Content:    nil,
-		Images:     nil,
-		ToolCallId: nil,
-		ToolCalls:  nil,
-		Output:     nil,
+		Role:      &role,
+		Content:   nil,
+		Images:    nil,
+		ToolCalls: nil,
 	}
 
 	var content string
@@ -267,8 +261,8 @@ func (r *Anthropic) MessageContentToMessage(message *anthropic.Message, output a
 
 	// * set structured output
 	if output != nil && content != "" {
-		if err := json.Unmarshal([]byte(content), output); err == nil {
-			result.Output = output
+		if err := json.Unmarshal([]byte(content), output); err != nil {
+			gut.Debug("failed to unmarshal output content", err)
 		}
 	}
 
