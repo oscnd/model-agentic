@@ -31,9 +31,14 @@ func main() {
 		},
 	}
 
+	option := &call.Option{
+		SchemaName:        gut.Ptr("Person"),
+		SchemaDescription: gut.Ptr("Person information with 2 email addresses"),
+	}
+
 	output := new(Person)
 
-	response, err := caller.Call(request, new(call.Option), output)
+	response, err := caller.Call(request, option, output)
 	if err != nil {
 		panic(err)
 	}
