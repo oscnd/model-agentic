@@ -1,5 +1,7 @@
 package call
 
+import "fmt"
+
 type Tool struct {
 	Type        *string `json:"type,omitempty"`
 	Name        *string `json:"name,omitempty"`
@@ -13,4 +15,8 @@ type ToolCall struct {
 	Name      *string `json:"name,omitempty"`
 	Arguments []byte  `json:"arguments,omitempty"`
 	Result    []byte  `json:"output,omitempty"`
+}
+
+func (r *ToolCall) String() string {
+	return fmt.Sprintf("Name: %s, Request: %s, Response: %s", *r.Name, r.Arguments, r.Result)
 }

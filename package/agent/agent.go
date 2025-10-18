@@ -10,6 +10,7 @@ type Agent struct {
 	Option    *Option                 `json:"option"`
 	Functions []*function.Declaration `json:"functions"`
 	Subagents []*Agent                `json:"subagents"`
+	Messages  []*call.Message         `json:"messages"`
 }
 
 func New(caller call.Caller, option *Option) *Agent {

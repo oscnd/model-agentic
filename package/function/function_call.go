@@ -8,13 +8,15 @@ import (
 )
 
 type Caller interface {
-	Call(request *Request, option *call.Option, output any, callback func(invoke *CallbackInvoke)) (*call.Response, *gut.ErrorInstance)
+	Message() []*call.Message
 	AddDeclaration(declaration *Declaration)
+	Call(request *Request, option *call.Option, output any, callback func(invoke *CallbackInvoke)) (*call.Response, *gut.ErrorInstance)
 }
 
 type Call struct {
-	Caller       call.Caller    `json:"-"`
-	Declarations []*Declaration `json:"declarations"`
+	Caller       call.Caller     `json:"-"`
+	Declarations []*Declaration  `json:"declarations"`
+	Messages     []*call.Message `json:"messages"`
 }
 
 func New(caller call.Caller) Caller {
@@ -24,32 +26,40 @@ func New(caller call.Caller) Caller {
 	}
 }
 
-func (c *Call) AddDeclaration(declaration *Declaration) {
-	c.Declarations = append(c.Declarations, declaration)
+func (r *Call) Message() []*call.Message {
+	return r.Messages
 }
 
-func (c *Call) Call(request *Request, option *call.Option, output any, callback func(invoke *CallbackInvoke)) (*call.Response, *gut.ErrorInstance) {
+func (r *Call) AddDeclaration(declaration *Declaration) {
+	r.Declarations = append(r.Declarations, declaration)
+}
+
+func (r *Call) Call(request *Request, option *call.Option, output any, callback func(invoke *CallbackInvoke)) (*call.Response, *gut.ErrorInstance) {
+	// * set initial messages
+	r.Messages = request.Messages
+
 	// * convert function request to call request by appending function declarations as tools
 	callRequest := &call.Request{
 		Model:       request.Model,
-		Messages:    request.Messages,
+		Messages:    nil,
 		MaxTokens:   request.MaxTokens,
 		Temperature: request.Temperature,
 		TopP:        request.TopP,
 		TopK:        request.TopK,
-		Tools:       c.DeclarationsToTools(),
+		Tools:       r.DeclarationsToTools(),
 	}
 
 	// * loop until no more tool calls
 	for {
 		// * call underlying caller
-		response, err := c.Caller.Call(callRequest, option, output)
+		callRequest.Messages = r.Messages
+		response, err := r.Caller.Call(callRequest, option, output)
 		if err != nil {
 			return nil, err
 		}
 
 		// * check if there are tool calls
-		if response.FinishReason != "tool_calls" || len(response.Message.ToolCalls) == 0 {
+		if response.FinishReason != "tool_calls" && len(response.Message.ToolCalls) == 0 {
 			return response, nil
 		}
 
@@ -57,7 +67,7 @@ func (c *Call) Call(request *Request, option *call.Option, output any, callback 
 		toolCalls := make([]*call.ToolCall, 0)
 		for _, toolCall := range response.Message.ToolCalls {
 			// * find matching declaration
-			declaration := c.GetDeclaration(toolCall.Name)
+			declaration := r.GetDeclaration(toolCall.Name)
 			if declaration == nil {
 				return nil, gut.Err(false, "declaration not found for tool: "+gut.Val(toolCall.Name), nil)
 			}
@@ -112,14 +122,14 @@ func (c *Call) Call(request *Request, option *call.Option, output any, callback 
 			ToolCalls: toolCalls,
 		}
 
-		// * append tool result message
-		callRequest.Messages = append(callRequest.Messages, toolMessage)
+		// * append result message
+		r.Messages = append(callRequest.Messages, toolMessage)
 	}
 }
 
-func (c *Call) DeclarationsToTools() []*call.Tool {
+func (r *Call) DeclarationsToTools() []*call.Tool {
 	var tools []*call.Tool
-	for _, declaration := range c.Declarations {
+	for _, declaration := range r.Declarations {
 		tool := &call.Tool{
 			Type:        gut.Ptr("function"),
 			Name:        declaration.Name,
@@ -131,11 +141,11 @@ func (c *Call) DeclarationsToTools() []*call.Tool {
 	return tools
 }
 
-func (c *Call) GetDeclaration(name *string) *Declaration {
+func (r *Call) GetDeclaration(name *string) *Declaration {
 	if name == nil {
 		return nil
 	}
-	for _, declaration := range c.Declarations {
+	for _, declaration := range r.Declarations {
 		if declaration.Name != nil && *declaration.Name == *name {
 			return declaration
 		}

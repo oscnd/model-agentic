@@ -140,7 +140,7 @@ func (r *Openai) RequestToMessages(request *Request) []openai.ChatCompletionMess
 			messages = append(messages, r.AssistantMessageToChatParam(msg))
 		case "tool":
 			for _, toolCall := range msg.ToolCalls {
-				messages = append(messages, openai.ToolMessage(fmt.Sprintf("Name: %s, Request: %s, Response: %s", *toolCall.Name, toolCall.Arguments, toolCall.Result), *toolCall.Id))
+				messages = append(messages, openai.ToolMessage(toolCall.String(), *toolCall.Id))
 			}
 		}
 	}

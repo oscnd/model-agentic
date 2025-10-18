@@ -7,7 +7,8 @@ import (
 )
 
 func (r *Agent) Call(task *string, output any, callback func(invoke *function.CallbackInvoke)) (*call.Response, *gut.ErrorInstance) {
-	// * construct function request
+	// * construct function caller
+	caller := function.New(r.Caller)
 	request := r.CallCreateRequest(task)
 
 	// * add function declarations
@@ -15,11 +16,10 @@ func (r *Agent) Call(task *string, output any, callback func(invoke *function.Ca
 
 	// * add subagent functions
 	for _, subagent := range r.Subagents {
-		functions = append(functions, subagent.Function(callback))
+		functions = append(functions, subagent.Function(caller, callback))
 	}
 
 	// * apply functions
-	caller := function.New(r.Caller)
 	for _, f := range functions {
 		caller.AddDeclaration(f)
 	}
@@ -62,6 +62,7 @@ func (r *Agent) CallCreateRequest(task *string) *function.Request {
 	}
 
 	request.Messages = append(request.Messages, systemMessage, userMessage)
+	request.Messages = append(request.Messages, r.Messages...)
 
 	return request
 }
