@@ -12,10 +12,6 @@ func (r *Agent) Function(caller function.Caller, callback func(invoke *function.
 		IncludeContext *bool   `json:"includeContext" description:"Whether to include the parent agent's context to subagent" validate:"required"`
 	}
 
-	type Result struct {
-		Output *string `json:"output" description:"The output from the task processed"`
-	}
-
 	return &function.Declaration{
 		Name:        gut.Ptr("call_" + *r.Option.Name),
 		Description: r.Option.Description,
@@ -36,13 +32,11 @@ func (r *Agent) Function(caller function.Caller, callback func(invoke *function.
 				}
 			}
 
-			output := new(Result)
+			var output map[string]any
 			if _, err := agent.Call(&task, &output, callback); err != nil {
 				return nil, gut.Err(false, "agent function call error", err)
 			}
-			return map[string]any{
-				"output": output.Output,
-			}, nil
+			return output, nil
 		},
 	}
 }
