@@ -24,10 +24,7 @@ func TestCallMagicNumber(t *testing.T) {
 		getMagicNumberDeclaration := &Declaration{
 			Name:        gut.Ptr("get_magic_number"),
 			Description: gut.Ptr("Get a random magic number between 1 and 100"),
-			Argument: &call.Schema{
-				Type:       gut.Ptr("object"),
-				Properties: map[string]*call.Schema{},
-			},
+			Argument:    nil,
 			Func: func(args map[string]any) (map[string]any, *gut.ErrorInstance) {
 				numbers = append(numbers, gut.Rand.Intn(100)+1)
 				return map[string]any{
