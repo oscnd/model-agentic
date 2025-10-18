@@ -37,9 +37,9 @@ func TestCallMagicNumber(t *testing.T) {
 		checkNumberDeclaration := &Declaration{
 			Name:        gut.Ptr("check_number"),
 			Description: gut.Ptr("Check if the provided number matches the magic number"),
-			Argument: call.SchemaConvert(struct {
+			Argument: call.SchemaConvert(new(struct {
 				Numbers []int `json:"numbers" description:"The number to check"`
-			}{}),
+			})),
 			Func: func(args map[string]any) (map[string]any, *gut.ErrorInstance) {
 				inputNumbers := args["numbers"].([]any)
 				if len(numbers) < 2 {

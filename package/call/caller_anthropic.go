@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/anthropics/anthropic-sdk-go"
@@ -261,6 +262,9 @@ func (r *Anthropic) MessageContentToMessage(message *anthropic.Message, output a
 
 	// * set structured output
 	if output != nil && content != "" {
+		content = strings.TrimPrefix(content, "```")
+		content = strings.TrimPrefix(content, "json")
+		content = strings.TrimSuffix(content, "```")
 		if err := json.Unmarshal([]byte(content), output); err != nil {
 			gut.Debug("failed to unmarshal output content", err)
 		}

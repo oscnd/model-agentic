@@ -224,7 +224,7 @@ func (r *Openai) ChatCompletionToResponse(completion *openai.ChatCompletion) *Re
 }
 
 func (r *Openai) ChatCompletionMessageToMessage(message openai.ChatCompletionMessage) *Message {
-	result := &Message{}
+	result := new(Message)
 
 	if message.Role != "" {
 		role := string(message.Role)

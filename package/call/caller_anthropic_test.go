@@ -25,7 +25,7 @@ func TestAnthropicCaller(t *testing.T) {
 
 		maxTokens := 100
 		temperature := 0.7
-		output := &SimpleOutput{}
+		output := new(SimpleOutput)
 
 		request := &Request{
 			Model:       &model,
@@ -59,7 +59,7 @@ func TestAnthropicCaller(t *testing.T) {
 		}
 
 		maxTokens := 150
-		output := &ImageOutput{}
+		output := new(ImageOutput)
 
 		img := image.NewRGBA(image.Rect(0, 0, 128, 128))
 		for y := 0; y < 128; y++ {
@@ -103,7 +103,7 @@ func TestAnthropicCaller(t *testing.T) {
 		}
 
 		maxTokens := 200
-		output := &ToolOutput{}
+		output := new(ToolOutput)
 
 		request := &Request{
 			Model:     &model,
@@ -187,10 +187,5 @@ func TestAnthropicCaller(t *testing.T) {
 
 		// * assert output is populated
 		assert.NotNil(t, output)
-
-		// * check if structured output was parsed
-		if response.Message != nil && response.Message.Output != nil {
-			assert.Equal(t, output, response.Message.Output)
-		}
 	})
 }

@@ -36,7 +36,7 @@ type PointerStruct struct {
 func TestSchemaConvert(t *testing.T) {
 
 	t.Run("StructWithAllTypes", func(t *testing.T) {
-		output := &FullPerson{}
+		output := new(FullPerson)
 		schema := SchemaConvert(output)
 
 		assert.NotNil(t, schema)
@@ -110,7 +110,7 @@ func TestSchemaConvert(t *testing.T) {
 	})
 
 	t.Run("PointerTypes", func(t *testing.T) {
-		output := &PointerStruct{}
+		output := new(PointerStruct)
 		schema := SchemaConvert(output)
 
 		assert.NotNil(t, schema)

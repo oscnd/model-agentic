@@ -20,7 +20,7 @@ type Call struct {
 func New(caller call.Caller) Caller {
 	return &Call{
 		Caller:       caller,
-		Declarations: []*Declaration{},
+		Declarations: make([]*Declaration, 0),
 	}
 }
 

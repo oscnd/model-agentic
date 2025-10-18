@@ -61,7 +61,6 @@ func SchemaConvertFromType(typ reflect.Type) *Schema {
 	case reflect.Bool:
 		return &Schema{Type: gut.Ptr("boolean")}
 	case reflect.Interface:
-		// * for interface{}, return empty schema to allow any type
 		return &Schema{}
 	default:
 		return &Schema{Type: gut.Ptr("string")}
