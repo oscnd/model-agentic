@@ -1,6 +1,6 @@
 module go.scnd.dev/open/model-agentic
 
-go 1.24.4
+go 1.25.0
 
 require (
 	github.com/anthropics/anthropic-sdk-go v1.14.0

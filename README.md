@@ -7,7 +7,7 @@ Language model agentic framework
 Install package using go get:
 
 ```bash
-go get go.scnd.dev/model/agentic
+go get -u go.scnd.dev/open/model-agentic
 ```
 
 Initialize an agent with a language model and tools:
