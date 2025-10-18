@@ -10,6 +10,7 @@ import (
 	"github.com/bsthun/gut"
 	"github.com/openai/openai-go"
 	"github.com/openai/openai-go/option"
+	"github.com/openai/openai-go/shared"
 )
 
 type Openai struct {
@@ -27,13 +28,13 @@ func NewOpenai(baseUrl string, apiKey string) Caller {
 	}
 }
 
-func (r *Openai) Call(request *Request, output any) (*Response, *gut.ErrorInstance) {
-	if request == nil {
-		return nil, gut.Err(false, "request is nil", nil)
+func (r *Openai) Call(request *Request, option *Option, output any) (*Response, *gut.ErrorInstance) {
+	if request == nil || option == nil {
+		return nil, gut.Err(false, "request or option is nil", nil)
 	}
 
 	// * convert request to openai chat parameters
-	chatParams := r.RequestToChatParams(request)
+	chatParams := r.RequestToChatParams(request, option, output)
 
 	// * call openai api with retry logic
 	maxRetries := 3
@@ -61,10 +62,17 @@ func (r *Openai) Call(request *Request, output any) (*Response, *gut.ErrorInstan
 		return nil, gut.Err(false, "invalid response from openai", nil)
 	}
 
+	// * parse response content
+	if output != nil && response.Message != nil && response.Message.Content != nil {
+		if err := json.Unmarshal([]byte(*response.Message.Content), output); err != nil {
+			return nil, gut.Err(false, "failed to unmarshal response content to output", err)
+		}
+	}
+
 	return response, nil
 }
 
-func (r *Openai) RequestToChatParams(request *Request) openai.ChatCompletionNewParams {
+func (r *Openai) RequestToChatParams(request *Request, option *Option, output any) openai.ChatCompletionNewParams {
 	// * convert messages
 	messages := r.RequestToMessages(request)
 
@@ -92,6 +100,22 @@ func (r *Openai) RequestToChatParams(request *Request) openai.ChatCompletionNewP
 	// * set tools if provided
 	if len(request.Tools) > 0 {
 		chatParams.Tools = r.RequestToTools(request.Tools)
+	}
+
+	// * set output format if output schema is provided
+	if output != nil {
+		schema := SchemaConvert(output)
+		chatParams.ResponseFormat = openai.ChatCompletionNewParamsResponseFormatUnion{
+			OfJSONSchema: &shared.ResponseFormatJSONSchemaParam{
+				Type: "json_schema",
+				JSONSchema: shared.ResponseFormatJSONSchemaJSONSchemaParam{
+					Name:        gut.Val(option.SchemaName),
+					Description: openai.String(gut.Val(option.SchemaDescription)),
+					Schema:      schema,
+					Strict:      openai.Bool(true),
+				},
+			},
+		}
 	}
 
 	return chatParams
@@ -144,7 +168,7 @@ func (r *Openai) UserMessageToChatParam(message *Message) openai.ChatCompletionM
 
 		// * add image content
 		imageData := base64.StdEncoding.EncodeToString(message.Images)
-		imageUrl := fmt.Sprintf("data:image/jpeg;base64,%s", imageData)
+		imageUrl := fmt.Sprintf("data:image/png;base64,%s", imageData)
 		contentParts = append(contentParts, openai.ImageContentPart(openai.ChatCompletionContentPartImageImageURLParam{
 			URL: imageUrl,
 		}))
@@ -242,8 +266,7 @@ func (r *Openai) RequestToTools(tools []*Tool) []openai.ChatCompletionToolParam 
 		// * convert input schema with proper items handling
 		var parameters openai.FunctionParameters
 		if tool.InputSchema != nil {
-			convertedSchema := r.ConvertSchema(tool.InputSchema)
-			schemaBytes, _ := json.Marshal(convertedSchema)
+			schemaBytes, _ := json.Marshal(tool.InputSchema)
 			_ = json.Unmarshal(schemaBytes, &parameters)
 		}
 
@@ -270,64 +293,6 @@ func (r *Openai) RequestToTools(tools []*Tool) []openai.ChatCompletionToolParam 
 	}
 
 	return openaiTools
-}
-
-func (r *Openai) ConvertSchema(schema *Schema) map[string]any {
-	if schema == nil {
-		return nil
-	}
-
-	result := make(map[string]any)
-
-	// * convert type
-	if schema.Type != nil {
-		result["type"] = *schema.Type
-	}
-
-	// * convert description
-	if schema.Description != nil {
-		result["description"] = *schema.Description
-	}
-
-	// * convert enum
-	if len(schema.Enum) > 0 {
-		var enum []any
-		for _, enumValue := range schema.Enum {
-			if enumValue != nil {
-				enum = append(enum, *enumValue)
-			}
-		}
-		result["enum"] = enum
-	}
-
-	// * convert properties
-	if len(schema.Properties) > 0 {
-		properties := make(map[string]any)
-		for key, propSchema := range schema.Properties {
-			if propSchema != nil {
-				properties[key] = r.ConvertSchema(propSchema)
-			}
-		}
-		result["properties"] = properties
-	}
-
-	// * convert items for arrays
-	if schema.Items != nil {
-		result["items"] = r.ConvertSchema(schema.Items)
-	}
-
-	// * convert required fields
-	if len(schema.Required) > 0 {
-		var required []any
-		for _, reqValue := range schema.Required {
-			if reqValue != nil {
-				required = append(required, *reqValue)
-			}
-		}
-		result["required"] = required
-	}
-
-	return result
 }
 
 func (r *Openai) ChatCompletionToolCallToToolCall(toolCall openai.ChatCompletionMessageToolCall) *ToolCall {

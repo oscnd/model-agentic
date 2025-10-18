@@ -6,27 +6,37 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestSchemaConvert(t *testing.T) {
-	type PersonStruct struct {
-		Name    string    `json:"name" validate:"required" description:"The name of the person"`
-		Age     int       `json:"age" validate:"required" description:"The age of the person"`
-		Email   string    `json:"email,omitempty" description:"The email address"`
-		Active  bool      `json:"active" validate:"required" description:"Whether the person is active"`
-		Tags    []*string `json:"tags,omitempty" description:"List of tags associated with the person"`
-		Address *struct {
-			Street string `json:"street"`
-			City   string `json:"city"`
-		} `json:"address,omitempty"`
-	}
+type Person struct {
+	Name    string   `json:"name" description:"The name of the person" validate:"required"`
+	Emails  []string `json:"email" description:"The email address" validate:"required,email"`
+	Address *struct {
+		Street string `json:"street" validate:"required"`
+		City   string `json:"city" validate:"required"`
+	} `json:"address" validate:"required"`
+}
 
-	type PointerStruct struct {
-		Name   *string   `json:"name" validate:"required" description:"Pointer to string"`
-		Phones *[]string `json:"phones,omitempty" description:"Pointer to slice of strings"`
-		Emails []*string `json:"emails" validate:"required" description:"Slice of pointer to strings"`
-	}
+type FullPerson struct {
+	Name    string    `json:"name" validate:"required" description:"The name of the person"`
+	Age     int       `json:"age" validate:"required" description:"The age of the person"`
+	Email   string    `json:"email,omitempty" description:"The email address"`
+	Active  bool      `json:"active" validate:"required" description:"Whether the person is active"`
+	Tags    []*string `json:"tags,omitempty" description:"List of tags associated with the person"`
+	Address *struct {
+		Street string `json:"street"`
+		City   string `json:"city"`
+	} `json:"address,omitempty"`
+}
+
+type PointerStruct struct {
+	Name   *string   `json:"name" validate:"required" description:"Pointer to string"`
+	Phones *[]string `json:"phones,omitempty" description:"Pointer to slice of strings"`
+	Emails []*string `json:"emails" validate:"required" description:"Slice of pointer to strings"`
+}
+
+func TestSchemaConvert(t *testing.T) {
 
 	t.Run("StructWithAllTypes", func(t *testing.T) {
-		output := &PersonStruct{}
+		output := &FullPerson{}
 		schema := SchemaConvert(output)
 
 		assert.NotNil(t, schema)

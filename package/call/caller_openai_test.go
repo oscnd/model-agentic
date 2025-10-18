@@ -38,7 +38,7 @@ func TestOpenaiCaller(t *testing.T) {
 			},
 		}
 
-		response, err := caller.Call(request, nil)
+		response, err := caller.Call(request, new(Option), nil)
 
 		// * assert no error occurred
 		assert.Nil(t, err)
@@ -74,7 +74,7 @@ func TestOpenaiCaller(t *testing.T) {
 			},
 		}
 
-		response, err := caller.Call(request, nil)
+		response, err := caller.Call(request, new(Option), nil)
 
 		// * assert no error occurred
 		assert.Nil(t, err)
@@ -115,7 +115,7 @@ func TestOpenaiCaller(t *testing.T) {
 			},
 		}
 
-		response, err := caller.Call(request, nil)
+		response, err := caller.Call(request, new(Option), nil)
 
 		// * assert no error occurred
 		assert.Nil(t, err)
@@ -126,12 +126,45 @@ func TestOpenaiCaller(t *testing.T) {
 
 	// * test nil request
 	t.Run("NilRequest", func(t *testing.T) {
-		response, err := caller.Call(nil, nil)
+		response, err := caller.Call(nil, nil, nil)
 
 		// * assert error occurred
 		assert.NotNil(t, err)
 
 		// * assert response is nil
 		assert.Nil(t, response)
+	})
+
+	// * test structured output
+	t.Run("StructuredOutput", func(t *testing.T) {
+		maxTokens := 200
+		output := new(Person)
+
+		request := &Request{
+			Model:     &model,
+			MaxTokens: &maxTokens,
+			Messages: []*Message{
+				{
+					Role:    gut.Ptr("user"),
+					Content: gut.Ptr("Generate information about a person named John who is 30 years old, lives in New York, and has an active status. Return in JSON format."),
+				},
+			},
+		}
+
+		option := &Option{
+			SchemaName:        gut.Ptr("Person"),
+			SchemaDescription: gut.Ptr("Person information"),
+		}
+
+		response, err := caller.Call(request, option, output)
+
+		// * assert no error occurred
+		assert.Nil(t, err)
+
+		// * assert response is not nil
+		assert.NotNil(t, response)
+
+		// * assert output is populated
+		assert.NotNil(t, output.Name)
 	})
 }

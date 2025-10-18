@@ -43,7 +43,7 @@ func TestAnthropicCaller(t *testing.T) {
 			},
 		}
 
-		response, err := caller.Call(request, output)
+		response, err := caller.Call(request, new(Option), output)
 
 		// * assert no error occurred
 		assert.Nil(t, err)
@@ -84,7 +84,7 @@ func TestAnthropicCaller(t *testing.T) {
 			},
 		}
 
-		response, err := caller.Call(request, output)
+		response, err := caller.Call(request, new(Option), output)
 
 		// * assert no error occurred
 		assert.Nil(t, err)
@@ -133,7 +133,7 @@ func TestAnthropicCaller(t *testing.T) {
 			},
 		}
 
-		response, err := caller.Call(request, output)
+		response, err := caller.Call(request, new(Option), output)
 
 		// * assert no error occurred
 		assert.Nil(t, err)
@@ -147,7 +147,7 @@ func TestAnthropicCaller(t *testing.T) {
 
 	// * test nil request
 	t.Run("NilRequest", func(t *testing.T) {
-		response, err := caller.Call(nil, nil)
+		response, err := caller.Call(nil, new(Option), nil)
 
 		// * assert error occurred
 		assert.NotNil(t, err)
@@ -158,20 +158,8 @@ func TestAnthropicCaller(t *testing.T) {
 
 	// * test structured output
 	t.Run("StructuredOutput", func(t *testing.T) {
-		type TestOutput struct {
-			// * Person information response
-			Name    string `json:"name" description:"The name of the person"`
-			Age     int    `json:"age" description:"The age of the person"`
-			Email   string `json:"email,omitempty" description:"The email address"`
-			Active  bool   `json:"active" description:"Whether the person is active"`
-			Address *struct {
-				Street string `json:"street"`
-				City   string `json:"city"`
-			} `json:"address,omitempty"`
-		}
-
 		maxTokens := 200
-		output := &TestOutput{}
+		output := new(Person)
 
 		request := &Request{
 			Model:     &model,
@@ -184,7 +172,12 @@ func TestAnthropicCaller(t *testing.T) {
 			},
 		}
 
-		response, err := caller.Call(request, output)
+		option := &Option{
+			SchemaName:        gut.Ptr("Person"),
+			SchemaDescription: gut.Ptr("Person information"),
+		}
+
+		response, err := caller.Call(request, option, output)
 
 		// * assert no error occurred
 		assert.Nil(t, err)

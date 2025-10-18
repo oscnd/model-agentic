@@ -27,9 +27,9 @@ func NewAnthropic(baseUrl string, apiKey string) Caller {
 	}
 }
 
-func (r *Anthropic) Call(request *Request, output any) (*Response, *gut.ErrorInstance) {
-	if request == nil {
-		return nil, gut.Err(false, "request is nil", nil)
+func (r *Anthropic) Call(request *Request, option *Option, output any) (*Response, *gut.ErrorInstance) {
+	if request == nil || option == nil {
+		return nil, gut.Err(false, "request or option is nil", nil)
 	}
 
 	// * convert request to anthropic message parameters
@@ -155,7 +155,7 @@ func (r *Anthropic) UserMessageToMessageParam(message *Message) anthropic.Messag
 		// * add image content
 		imageData := base64.StdEncoding.EncodeToString(message.Images)
 		imageSource := anthropic.Base64ImageSourceParam{
-			MediaType: anthropic.Base64ImageSourceMediaTypeImageJPEG,
+			MediaType: anthropic.Base64ImageSourceMediaTypeImagePNG,
 			Data:      imageData,
 		}
 		contentBlocks = append(contentBlocks, anthropic.NewImageBlock(imageSource))
@@ -308,8 +308,7 @@ func (r *Anthropic) RequestToTools(tools []*Tool) []anthropic.ToolUnionParam {
 		var parameters anthropic.ToolInputSchemaParam
 		if tool.InputSchema != nil {
 			// * convert schema recursively to handle items properly
-			convertedSchema := r.ConvertSchema(tool.InputSchema)
-			schemaBytes, _ := json.Marshal(convertedSchema)
+			schemaBytes, _ := json.Marshal(tool.InputSchema)
 			_ = json.Unmarshal(schemaBytes, &parameters)
 		}
 
@@ -330,62 +329,4 @@ func (r *Anthropic) RequestToTools(tools []*Tool) []anthropic.ToolUnionParam {
 	}
 
 	return anthropicTools
-}
-
-func (r *Anthropic) ConvertSchema(schema *Schema) map[string]any {
-	if schema == nil {
-		return nil
-	}
-
-	result := make(map[string]any)
-
-	// * convert type
-	if schema.Type != nil {
-		result["type"] = *schema.Type
-	}
-
-	// * convert description
-	if schema.Description != nil {
-		result["description"] = *schema.Description
-	}
-
-	// * convert enum
-	if len(schema.Enum) > 0 {
-		var enum []any
-		for _, enumValue := range schema.Enum {
-			if enumValue != nil {
-				enum = append(enum, *enumValue)
-			}
-		}
-		result["enum"] = enum
-	}
-
-	// * convert properties
-	if len(schema.Properties) > 0 {
-		properties := make(map[string]any)
-		for key, propSchema := range schema.Properties {
-			if propSchema != nil {
-				properties[key] = r.ConvertSchema(propSchema)
-			}
-		}
-		result["properties"] = properties
-	}
-
-	// * convert items for arrays
-	if schema.Items != nil {
-		result["items"] = r.ConvertSchema(schema.Items)
-	}
-
-	// * convert required fields
-	if len(schema.Required) > 0 {
-		var required []any
-		for _, reqValue := range schema.Required {
-			if reqValue != nil {
-				required = append(required, *reqValue)
-			}
-		}
-		result["required"] = required
-	}
-
-	return result
 }
