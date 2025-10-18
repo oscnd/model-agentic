@@ -125,7 +125,7 @@ func (r *Anthropic) RequestToMessages(request *Request) []anthropic.MessageParam
 		case "tool":
 			// * tool results are added as user messages in anthropic
 			for _, toolCall := range msg.ToolCalls {
-				toolResultBlock := anthropic.NewToolResultBlock(*toolCall.Id, fmt.Sprintf("Name: %s, Request %s, Response: %s", *toolCall.Name, toolCall.Arguments, toolCall.Result), false)
+				toolResultBlock := anthropic.NewToolResultBlock(*toolCall.Id, fmt.Sprintf("Name: %s, Request: %s, Response: %s", *toolCall.Name, toolCall.Arguments, toolCall.Result), false)
 				messages = append(messages, anthropic.NewUserMessage(toolResultBlock))
 			}
 		}

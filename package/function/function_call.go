@@ -95,13 +95,13 @@ func (c *Call) Call(request *Request, option *call.Option, output any, callback 
 			}
 
 			// * marshal response to json
-			responseJSON, err := json.Marshal(functionResponse)
+			responseJson, err := json.Marshal(functionResponse)
 			if err != nil {
 				return nil, gut.Err(false, "failed to marshal function response to json", err)
 			}
 
 			// * create tool result message
-			toolCall.Result = responseJSON
+			toolCall.Result = responseJson
 			toolCalls = append(toolCalls, toolCall)
 		}
 
