@@ -1,6 +1,6 @@
 package function
 
-import "go.scnd.dev/open/model-agentic/package/call"
+import "go.scnd.dev/open/model/agentic/package/call"
 
 type Request struct {
 	Model       *string         `json:"model,omitempty"`

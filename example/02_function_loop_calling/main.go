@@ -6,8 +6,8 @@ import (
 
 	"github.com/bsthun/gut"
 	"github.com/davecgh/go-spew/spew"
-	"go.scnd.dev/open/model-agentic/package/call"
-	"go.scnd.dev/open/model-agentic/package/function"
+	"go.scnd.dev/open/model/agentic/package/call"
+	"go.scnd.dev/open/model/agentic/package/function"
 )
 
 func main() {

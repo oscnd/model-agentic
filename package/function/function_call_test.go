@@ -7,7 +7,7 @@ import (
 
 	"github.com/bsthun/gut"
 	"github.com/stretchr/testify/assert"
-	"go.scnd.dev/open/model-agentic/package/call"
+	"go.scnd.dev/open/model/agentic/package/call"
 )
 
 func TestCallMagicNumber(t *testing.T) {

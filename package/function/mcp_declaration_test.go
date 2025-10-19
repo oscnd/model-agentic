@@ -7,7 +7,7 @@ import (
 
 	"github.com/bsthun/gut"
 	"github.com/stretchr/testify/assert"
-	"go.scnd.dev/open/model-agentic/package/call"
+	"go.scnd.dev/open/model/agentic/package/call"
 )
 
 func TestMcpDeclarations(t *testing.T) {
@@ -58,7 +58,7 @@ func TestMcpDeclarations(t *testing.T) {
 			Messages: []*call.Message{
 				{
 					Role:    gut.Ptr("user"),
-					Content: gut.Ptr("Please search for the package name of https://pkg.go.dev/go.scnd.dev/open/model-agentic using the available functions. Tell me what the package name is."),
+					Content: gut.Ptr("Please search for the package name of https://pkg.go.dev/go.scnd.dev/open/model/agentic using the available functions. Tell me what the package name is."),
 				},
 			},
 		}

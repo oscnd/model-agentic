@@ -2,8 +2,8 @@ package agent
 
 import (
 	"github.com/bsthun/gut"
-	"go.scnd.dev/open/model-agentic/package/call"
-	"go.scnd.dev/open/model-agentic/package/function"
+	"go.scnd.dev/open/model/agentic/package/call"
+	"go.scnd.dev/open/model/agentic/package/function"
 )
 
 func (r *Agent) Call(task *string, output any, callback func(invoke *function.CallbackInvoke)) (*call.Response, *gut.ErrorInstance) {

@@ -1,4 +1,4 @@
-module go.scnd.dev/open/model-agentic
+module go.scnd.dev/open/model/agentic
 
 go 1.25.0
 

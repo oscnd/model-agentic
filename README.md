@@ -7,7 +7,7 @@ Language model agentic framework
 Install package using go get:
 
 ```bash
-go get -u go.scnd.dev/open/model-agentic
+go get -u go.scnd.dev/open/model/agentic
 ```
 
 Initialize an agent with a language model and tools:
@@ -20,7 +20,7 @@ import (
 
 	"github.com/bsthun/gut"
 	"github.com/davecgh/go-spew/spew"
-	"go.scnd.dev/open/model-agentic/package/call"
+	"go.scnd.dev/open/model/agentic/package/call"
 )
 
 func main() {

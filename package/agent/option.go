@@ -1,6 +1,6 @@
 package agent
 
-import "go.scnd.dev/open/model-agentic/package/call"
+import "go.scnd.dev/open/model/agentic/package/call"
 
 type Option struct {
 	Name                   *string      `json:"name" validate:"required,slug"`

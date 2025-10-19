@@ -1,8 +1,8 @@
 package agent
 
 import (
-	"go.scnd.dev/open/model-agentic/package/call"
-	"go.scnd.dev/open/model-agentic/package/function"
+	"go.scnd.dev/open/model/agentic/package/call"
+	"go.scnd.dev/open/model/agentic/package/function"
 )
 
 type Agent struct {

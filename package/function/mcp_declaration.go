@@ -6,7 +6,7 @@ import (
 
 	"github.com/mark3labs/mcp-go/client"
 	"github.com/mark3labs/mcp-go/mcp"
-	"go.scnd.dev/open/model-agentic/package/call"
+	"go.scnd.dev/open/model/agentic/package/call"
 )
 
 func McpDeclarations(url string) ([]*Declaration, error) {
@@ -38,7 +38,7 @@ func McpDeclarations(url string) ([]*Declaration, error) {
 				Sampling: &struct{}{},
 			},
 			ClientInfo: mcp.Implementation{
-				Name:    "model-agentic",
+				Name:    "agentic",
 				Version: "1.0.0",
 			},
 		},

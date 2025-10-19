@@ -2,8 +2,8 @@ package agent
 
 import (
 	"github.com/bsthun/gut"
-	"go.scnd.dev/open/model-agentic/package/call"
-	"go.scnd.dev/open/model-agentic/package/function"
+	"go.scnd.dev/open/model/agentic/package/call"
+	"go.scnd.dev/open/model/agentic/package/function"
 )
 
 func (r *Agent) Function(caller function.Caller, callback func(invoke *function.CallbackInvoke)) *function.Declaration {
