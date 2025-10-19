@@ -5,4 +5,5 @@ type Message struct {
 	Content   *string     `json:"content"`
 	Images    []byte      `json:"images,omitempty"`
 	ToolCalls []*ToolCall `json:"toolCalls,omitempty"`
+	Usage     *Usage      `json:"usage,omitempty"`
 }

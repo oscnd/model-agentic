@@ -13,7 +13,7 @@ import (
 	"github.com/bsthun/gut"
 )
 
-type Anthropic struct {
+type ProviderAnthropic struct {
 	Client *anthropic.Client
 }
 
@@ -23,12 +23,12 @@ func NewAnthropic(baseUrl string, apiKey string) Caller {
 		option.WithAPIKey(apiKey),
 	)
 
-	return &Anthropic{
+	return &ProviderAnthropic{
 		Client: &client,
 	}
 }
 
-func (r *Anthropic) Call(request *Request, option *Option, output any) (*Response, *gut.ErrorInstance) {
+func (r *ProviderAnthropic) Call(request *Request, option *Option, output any) (*Response, *gut.ErrorInstance) {
 	if request == nil || option == nil {
 		return nil, gut.Err(false, "request or option is nil", nil)
 	}
@@ -65,7 +65,7 @@ func (r *Anthropic) Call(request *Request, option *Option, output any) (*Respons
 	return response, nil
 }
 
-func (r *Anthropic) RequestToMessageParams(request *Request, output any) anthropic.MessageNewParams {
+func (r *ProviderAnthropic) RequestToMessageParams(request *Request, output any) anthropic.MessageNewParams {
 	// * convert messages
 	messages := r.RequestToMessages(request)
 
@@ -107,7 +107,7 @@ func (r *Anthropic) RequestToMessageParams(request *Request, output any) anthrop
 	return messageParams
 }
 
-func (r *Anthropic) RequestToMessages(request *Request) []anthropic.MessageParam {
+func (r *ProviderAnthropic) RequestToMessages(request *Request) []anthropic.MessageParam {
 	var messages []anthropic.MessageParam
 
 	for _, msg := range request.Messages {
@@ -135,7 +135,7 @@ func (r *Anthropic) RequestToMessages(request *Request) []anthropic.MessageParam
 	return messages
 }
 
-func (r *Anthropic) UserMessageToMessageParam(message *Message) anthropic.MessageParam {
+func (r *ProviderAnthropic) UserMessageToMessageParam(message *Message) anthropic.MessageParam {
 	if message == nil {
 		return anthropic.NewUserMessage(anthropic.NewTextBlock(""))
 	}
@@ -168,7 +168,7 @@ func (r *Anthropic) UserMessageToMessageParam(message *Message) anthropic.Messag
 	return anthropic.NewUserMessage(anthropic.NewTextBlock(content))
 }
 
-func (r *Anthropic) AssistantMessageToMessageParam(message *Message) anthropic.MessageParam {
+func (r *ProviderAnthropic) AssistantMessageToMessageParam(message *Message) anthropic.MessageParam {
 	if message == nil {
 		return anthropic.NewAssistantMessage(anthropic.NewTextBlock(""))
 	}
@@ -193,7 +193,7 @@ func (r *Anthropic) AssistantMessageToMessageParam(message *Message) anthropic.M
 	return anthropic.NewAssistantMessage(contentBlocks...)
 }
 
-func (r *Anthropic) ToolCallToToolUseBlock(toolCall *ToolCall) anthropic.ContentBlockParamUnion {
+func (r *ProviderAnthropic) ToolCallToToolUseBlock(toolCall *ToolCall) anthropic.ContentBlockParamUnion {
 	name := ""
 	input := make([]byte, 0)
 
@@ -212,7 +212,7 @@ func (r *Anthropic) ToolCallToToolUseBlock(toolCall *ToolCall) anthropic.Content
 	return anthropic.NewToolUseBlock(toolUseID, input, name)
 }
 
-func (r *Anthropic) MessageToResponse(message *anthropic.Message, output any) *Response {
+func (r *ProviderAnthropic) MessageToResponse(message *anthropic.Message, output any) *Response {
 	if message == nil || len(message.Content) == 0 {
 		return nil
 	}
@@ -234,7 +234,7 @@ func (r *Anthropic) MessageToResponse(message *anthropic.Message, output any) *R
 	return response
 }
 
-func (r *Anthropic) MessageContentToMessage(message *anthropic.Message, output any) *Message {
+func (r *ProviderAnthropic) MessageContentToMessage(message *anthropic.Message, output any) *Message {
 	role := "assistant"
 	result := &Message{
 		Role:      &role,
@@ -278,7 +278,7 @@ func (r *Anthropic) MessageContentToMessage(message *anthropic.Message, output a
 	return result
 }
 
-func (r *Anthropic) ToolUseBlockToToolCall(toolUseBlock anthropic.ToolUseBlock) *ToolCall {
+func (r *ProviderAnthropic) ToolUseBlockToToolCall(toolUseBlock anthropic.ToolUseBlock) *ToolCall {
 	result := &ToolCall{
 		Id:   &toolUseBlock.ID,
 		Name: &toolUseBlock.Name,
@@ -294,7 +294,7 @@ func (r *Anthropic) ToolUseBlockToToolCall(toolUseBlock anthropic.ToolUseBlock) 
 	return result
 }
 
-func (r *Anthropic) RequestToTools(tools []*Tool) []anthropic.ToolUnionParam {
+func (r *ProviderAnthropic) RequestToTools(tools []*Tool) []anthropic.ToolUnionParam {
 	var anthropicTools []anthropic.ToolUnionParam
 
 	for _, tool := range tools {

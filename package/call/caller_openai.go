@@ -13,7 +13,7 @@ import (
 	"github.com/openai/openai-go/shared"
 )
 
-type Openai struct {
+type ProviderOpenai struct {
 	Client *openai.Client
 }
 
@@ -23,12 +23,12 @@ func NewOpenai(baseUrl string, apiKey string) Caller {
 		option.WithAPIKey(apiKey),
 	)
 
-	return &Openai{
+	return &ProviderOpenai{
 		Client: &client,
 	}
 }
 
-func (r *Openai) Call(request *Request, option *Option, output any) (*Response, *gut.ErrorInstance) {
+func (r *ProviderOpenai) Call(request *Request, option *Option, output any) (*Response, *gut.ErrorInstance) {
 	if request == nil || option == nil {
 		return nil, gut.Err(false, "request or option is nil", nil)
 	}
@@ -72,7 +72,7 @@ func (r *Openai) Call(request *Request, option *Option, output any) (*Response, 
 	return response, nil
 }
 
-func (r *Openai) RequestToChatParams(request *Request, option *Option, output any) openai.ChatCompletionNewParams {
+func (r *ProviderOpenai) RequestToChatParams(request *Request, option *Option, output any) openai.ChatCompletionNewParams {
 	// * convert messages
 	messages := r.RequestToMessages(request)
 
@@ -121,7 +121,7 @@ func (r *Openai) RequestToChatParams(request *Request, option *Option, output an
 	return chatParams
 }
 
-func (r *Openai) RequestToMessages(request *Request) []openai.ChatCompletionMessageParamUnion {
+func (r *ProviderOpenai) RequestToMessages(request *Request) []openai.ChatCompletionMessageParamUnion {
 	var messages []openai.ChatCompletionMessageParamUnion
 
 	for _, msg := range request.Messages {
@@ -148,7 +148,7 @@ func (r *Openai) RequestToMessages(request *Request) []openai.ChatCompletionMess
 	return messages
 }
 
-func (r *Openai) UserMessageToChatParam(message *Message) openai.ChatCompletionMessageParamUnion {
+func (r *ProviderOpenai) UserMessageToChatParam(message *Message) openai.ChatCompletionMessageParamUnion {
 	if message == nil {
 		return openai.UserMessage("")
 	}
@@ -187,7 +187,7 @@ func (r *Openai) UserMessageToChatParam(message *Message) openai.ChatCompletionM
 	return openai.UserMessage(content)
 }
 
-func (r *Openai) AssistantMessageToChatParam(message *Message) openai.ChatCompletionMessageParamUnion {
+func (r *ProviderOpenai) AssistantMessageToChatParam(message *Message) openai.ChatCompletionMessageParamUnion {
 	if message == nil {
 		return openai.AssistantMessage("")
 	}
@@ -200,7 +200,7 @@ func (r *Openai) AssistantMessageToChatParam(message *Message) openai.ChatComple
 	return openai.AssistantMessage(content)
 }
 
-func (r *Openai) ChatCompletionToResponse(completion *openai.ChatCompletion) *Response {
+func (r *ProviderOpenai) ChatCompletionToResponse(completion *openai.ChatCompletion) *Response {
 	if completion == nil || len(completion.Choices) == 0 {
 		return nil
 	}
@@ -223,7 +223,7 @@ func (r *Openai) ChatCompletionToResponse(completion *openai.ChatCompletion) *Re
 	return response
 }
 
-func (r *Openai) ChatCompletionMessageToMessage(message openai.ChatCompletionMessage) *Message {
+func (r *ProviderOpenai) ChatCompletionMessageToMessage(message openai.ChatCompletionMessage) *Message {
 	result := new(Message)
 
 	if message.Role != "" {
@@ -251,7 +251,7 @@ func (r *Openai) ChatCompletionMessageToMessage(message openai.ChatCompletionMes
 	return result
 }
 
-func (r *Openai) RequestToTools(tools []*Tool) []openai.ChatCompletionToolParam {
+func (r *ProviderOpenai) RequestToTools(tools []*Tool) []openai.ChatCompletionToolParam {
 	var openaiTools []openai.ChatCompletionToolParam
 
 	for _, tool := range tools {
@@ -291,7 +291,7 @@ func (r *Openai) RequestToTools(tools []*Tool) []openai.ChatCompletionToolParam 
 	return openaiTools
 }
 
-func (r *Openai) ChatCompletionToolCallToToolCall(toolCall openai.ChatCompletionMessageToolCall) *ToolCall {
+func (r *ProviderOpenai) ChatCompletionToolCallToToolCall(toolCall openai.ChatCompletionMessageToolCall) *ToolCall {
 	typeStr := string(toolCall.Type)
 	result := &ToolCall{
 		Id:        &toolCall.ID,

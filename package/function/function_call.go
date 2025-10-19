@@ -60,6 +60,16 @@ func (r *Call) Call(request *Request, option *call.Option, output any, callback 
 
 		// * check if there are tool calls
 		if response.FinishReason != "tool_calls" && len(response.Message.ToolCalls) == 0 {
+			// * append final message
+			r.Messages = append(r.Messages, response.Message)
+
+			// * aggregate usage from all messages
+			for _, message := range callRequest.Messages {
+				*response.Usage.InputTokens += *message.Usage.InputTokens
+				*response.Usage.OutputTokens += *message.Usage.OutputTokens
+				*response.Usage.CachedTokens += *message.Usage.CachedTokens
+			}
+
 			return response, nil
 		}
 
@@ -120,6 +130,7 @@ func (r *Call) Call(request *Request, option *call.Option, output any, callback 
 			Content:   nil,
 			Images:    nil,
 			ToolCalls: toolCalls,
+			Usage:     response.Usage,
 		}
 
 		// * append result message
