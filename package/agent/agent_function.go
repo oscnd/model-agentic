@@ -6,6 +6,7 @@ import (
 	"go.scnd.dev/open/model/agentic/package/function"
 )
 
+// Function creates a function declaration for the agent to be used for executing from a parent agent
 func (r *Agent) Function(state *State) *function.Declaration {
 	type Arguments struct {
 		Task           *string `json:"task" description:"The task or question to be processed by the subagent" validate:"required"`

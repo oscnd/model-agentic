@@ -4,6 +4,7 @@ import (
 	"go.scnd.dev/open/model/agentic/package/function"
 )
 
+// Option contains configuration for agent, extended function options.
 type Option struct {
 	Name                   *string          `json:"name" validate:"required,slug"`
 	Persona                *string          `json:"persona" validate:"required"`

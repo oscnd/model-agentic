@@ -6,11 +6,13 @@ import (
 	"go.scnd.dev/open/model/agentic/package/function"
 )
 
+// State manages the execution state of an agent with task and function state
 type State struct {
 	Task          *string         `json:"task"`
 	FunctionState *function.State `json:"-"`
 }
 
+// NewState creates a new agent state with the specified task and initial messages
 func (r *Agent) NewState(task *string) *State {
 	// * construct messages
 	messages := make([]*call.Message, 0)

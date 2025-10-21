@@ -1,3 +1,5 @@
+// Package agent provides agent implementation with function calling capabilities,
+// it handles subagent dispatch, context management, and state-based execution.
 package agent
 
 import (
@@ -5,6 +7,7 @@ import (
 	"go.scnd.dev/open/model/agentic/package/function"
 )
 
+// Agent represents an agent with functions and subagents
 type Agent struct {
 	Caller    call.Caller             `json:"-"`
 	Option    *Option                 `json:"option"`

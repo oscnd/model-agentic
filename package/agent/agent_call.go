@@ -6,6 +6,7 @@ import (
 	"go.scnd.dev/open/model/agentic/package/function"
 )
 
+// Call executes the agent with state, during execution, state passed can use to manage function calls, subagent dispatch and callback hooks
 func (r *Agent) Call(state *State, output any) (*call.Response, *gut.ErrorInstance) {
 	// * construct function caller
 	caller := function.New(r.Caller, r.Option.FunctionOption)
