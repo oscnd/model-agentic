@@ -19,6 +19,12 @@ func TestCallMagicNumber(t *testing.T) {
 			Model:       &model,
 			MaxTokens:   gut.Ptr(300),
 			Temperature: gut.Ptr(0.7),
+			TopP:        nil,
+			TopK:        nil,
+			CallOption: &call.Option{
+				SchemaName:        nil,
+				SchemaDescription: nil,
+			},
 		}
 		functionCall := New(caller, option)
 
