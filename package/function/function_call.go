@@ -62,10 +62,13 @@ func (r *Call) Call(state *State, output any) (*call.Response, *gut.ErrorInstanc
 		// * check if there are tool calls
 		if response.FinishReason != "tool_calls" && len(response.Message.ToolCalls) == 0 {
 			// * append final message
-			state.ToolMessages = append(state.ToolMessages, response.Message)
+			callRequest.Messages = append(callRequest.Messages, response.Message)
 
 			// * aggregate usage from all messages
 			for _, message := range callRequest.Messages {
+				if message.Usage == nil {
+					continue
+				}
 				*response.Usage.InputTokens += *message.Usage.InputTokens
 				*response.Usage.OutputTokens += *message.Usage.OutputTokens
 				*response.Usage.CachedTokens += *message.Usage.CachedTokens

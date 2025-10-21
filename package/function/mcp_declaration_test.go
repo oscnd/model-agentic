@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/bsthun/gut"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/stretchr/testify/assert"
 	"go.scnd.dev/open/model/agentic/package/call"
 )
@@ -40,6 +41,12 @@ func TestMcpDeclarations(t *testing.T) {
 			Model:       &model,
 			MaxTokens:   &maxTokens,
 			Temperature: &temperature,
+			TopP:        nil,
+			TopK:        nil,
+			CallOption: &call.Option{
+				SchemaName:        nil,
+				SchemaDescription: nil,
+			},
 		}
 		functionCall := New(caller, option)
 
@@ -73,6 +80,7 @@ func TestMcpDeclarations(t *testing.T) {
 		}
 
 		// * call function
+		spew.Dump(state)
 		response, callErr := functionCall.Call(state, nil)
 
 		// * assert no error

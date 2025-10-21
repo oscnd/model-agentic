@@ -30,7 +30,7 @@ func NewState(initialMessages []*call.Message) *State {
 
 // Messages returns all messages in chronological order
 func (r *State) Messages() []*call.Message {
-	messages := make([]*call.Message, len(r.InitialMessages)+len(r.ToolMessages))
+	messages := make([]*call.Message, 0)
 	messages = append(messages, r.InitialMessages...)
 	messages = append(messages, r.ToolMessages...)
 	return messages
