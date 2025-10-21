@@ -34,7 +34,14 @@ func TestMcpDeclarations(t *testing.T) {
 		// * create caller
 		caller := call.NewOpenai(os.Getenv("OPENAI_BASE_URL"), os.Getenv("OPENAI_API_KEY"))
 		model := os.Getenv("OPENAI_MODEL")
-		functionCall := New(caller)
+		maxTokens := 500
+		temperature := 0.7
+		option := &Option{
+			Model:       &model,
+			MaxTokens:   &maxTokens,
+			Temperature: &temperature,
+		}
+		functionCall := New(caller, option)
 
 		// * fetch declarations from mcp server
 		mcpUrl := "http://localhost:3300/mcp"
@@ -48,29 +55,25 @@ func TestMcpDeclarations(t *testing.T) {
 			functionCall.AddDeclaration(declaration)
 		}
 
-		// * create request to search for package name
-		maxTokens := 500
-		temperature := 0.7
-		request := &Request{
-			Model:       &model,
-			MaxTokens:   &maxTokens,
-			Temperature: &temperature,
-			Messages: []*call.Message{
-				{
-					Role:    gut.Ptr("user"),
-					Content: gut.Ptr("Please search for the package name of https://pkg.go.dev/go.scnd.dev/open/model/agentic using the available functions. Tell me what the package name is."),
-				},
+		// * create state with initial messages
+		state := NewState([]*call.Message{
+			{
+				Role:    gut.Ptr("user"),
+				Content: gut.Ptr("Please search for the package name of https://pkg.go.dev/go.scnd.dev/open/model/agentic using the available functions. Tell me what the package name is."),
 			},
-		}
+		})
 
 		// * track invocations
-		var invocations []*CallbackInvoke
+		var invocations []*CallbackBeforeFunctionCall
 		var finalResponse string
 
+		state.OnBeforeFunctionCall = func(callback *CallbackBeforeFunctionCall) (map[string]any, *gut.ErrorInstance) {
+			invocations = append(invocations, callback)
+			return nil, nil
+		}
+
 		// * call function
-		response, callErr := functionCall.Call(request, new(call.Option), nil, func(invoke *CallbackInvoke) {
-			invocations = append(invocations, invoke)
-		})
+		response, callErr := functionCall.Call(state, nil)
 
 		// * assert no error
 		assert.Nil(t, callErr)

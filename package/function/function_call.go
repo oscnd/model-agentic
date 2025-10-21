@@ -38,14 +38,15 @@ func (r *Call) Call(state *State, output any) (*call.Response, *gut.ErrorInstanc
 		Temperature: r.Option.Temperature,
 		TopP:        r.Option.TopP,
 		TopK:        r.Option.TopK,
-		Messages:    state.Messages(),
+		Messages:    nil,
 		Tools:       r.Tools(),
 	}
 
 	// * loop until no more tool calls
 	for {
 		// * call underlying caller
-		response, err := r.Caller.Call(callRequest, option, output)
+		callRequest.Messages = state.Messages()
+		response, err := r.Caller.Call(callRequest, r.Option.CallOption, output)
 		if err != nil {
 			return nil, err
 		}
@@ -136,7 +137,7 @@ func (r *Call) Call(state *State, output any) (*call.Response, *gut.ErrorInstanc
 		}
 
 		// * append result message
-		state.ToolMessages = append(callRequest.Messages, toolMessage)
+		state.ToolMessages = append(state.ToolMessages, toolMessage)
 		if state.OnToolMessage != nil {
 			if err := state.OnToolMessage(toolMessage); err != nil {
 				return nil, err

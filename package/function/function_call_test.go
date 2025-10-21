@@ -15,7 +15,12 @@ func TestCallMagicNumber(t *testing.T) {
 		// * create caller
 		caller := call.NewOpenai(os.Getenv("OPENAI_BASE_URL"), os.Getenv("OPENAI_API_KEY"))
 		model := os.Getenv("OPENAI_MODEL")
-		functionCall := New(caller)
+		option := &Option{
+			Model:       &model,
+			MaxTokens:   gut.Ptr(300),
+			Temperature: gut.Ptr(0.7),
+		}
+		functionCall := New(caller, option)
 
 		// * store magic number
 		numbers := make([]int, 0)
@@ -74,42 +79,46 @@ func TestCallMagicNumber(t *testing.T) {
 		functionCall.AddDeclaration(getMagicNumberDeclaration)
 		functionCall.AddDeclaration(checkNumberDeclaration)
 
-		// * create request to call the function
-		maxTokens := 300
-		temperature := 0.7
-		request := &Request{
-			Model:       &model,
-			MaxTokens:   &maxTokens,
-			Temperature: &temperature,
-			Messages: []*call.Message{
-				{
-					Role:    gut.Ptr("user"),
-					Content: gut.Ptr("Please get the magic number 2 times, then use them to check for correctness. Use the provided functions. End task when checking is success."),
-				},
+		// * create state with initial messages
+		state := NewState([]*call.Message{
+			{
+				Role:    gut.Ptr("user"),
+				Content: gut.Ptr("Please get the magic number 2 times, then use them to check for correctness. Use the provided functions. End task when checking is success."),
 			},
+		})
+
+		// * track invocations using callbacks
+		var invocations []*CallbackBeforeFunctionCall
+		var afterInvocations []*CallbackAfterFunctionCall
+
+		state.OnBeforeFunctionCall = func(callback *CallbackBeforeFunctionCall) (map[string]any, *gut.ErrorInstance) {
+			invocations = append(invocations, callback)
+			return nil, nil
 		}
 
-		// * call function with callback to track invocations
-		var invocations []*CallbackInvoke
-		response, err := functionCall.Call(request, new(call.Option), nil, func(invoke *CallbackInvoke) {
-			invocations = append(invocations, invoke)
-		})
+		state.OnAfterFunctionCall = func(callback *CallbackAfterFunctionCall) (map[string]any, *gut.ErrorInstance) {
+			afterInvocations = append(afterInvocations, callback)
+			return nil, nil
+		}
+
+		// * call function
+		response, err := functionCall.Call(state, nil)
 
 		// * assert no error
 		assert.Nil(t, err)
 		assert.NotNil(t, response)
 
 		// * assert both functions were called
-		assert.GreaterOrEqual(t, len(invocations), 2)
+		assert.GreaterOrEqual(t, len(afterInvocations), 2)
 
 		// * find get_magic_number invocation
-		var getMagicInvoke *CallbackInvoke
-		var checkNumberInvoke *CallbackInvoke
-		for _, inv := range invocations {
-			if *inv.Declaration.Name == "get_magic_number" && inv.Response != nil {
+		var getMagicInvoke *CallbackAfterFunctionCall
+		var checkNumberInvoke *CallbackAfterFunctionCall
+		for _, inv := range afterInvocations {
+			if *inv.Declaration.Name == "get_magic_number" {
 				getMagicInvoke = inv
 			}
-			if *inv.Declaration.Name == "check_number" && inv.Response != nil {
+			if *inv.Declaration.Name == "check_number" {
 				checkNumberInvoke = inv
 			}
 		}
