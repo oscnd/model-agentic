@@ -9,7 +9,7 @@ import (
 
 type Caller interface {
 	AddDeclaration(declaration *Declaration)
-	Call(state *State, option *call.Option, output any) (*call.Response, *gut.ErrorInstance)
+	Call(state *State, output any) (*call.Response, *gut.ErrorInstance)
 }
 
 type Call struct {
@@ -30,7 +30,7 @@ func (r *Call) AddDeclaration(declaration *Declaration) {
 	r.Declarations = append(r.Declarations, declaration)
 }
 
-func (r *Call) Call(state *State, option *call.Option, output any) (*call.Response, *gut.ErrorInstance) {
+func (r *Call) Call(state *State, output any) (*call.Response, *gut.ErrorInstance) {
 	// * convert function request to call request by appending function declarations as tools
 	callRequest := &call.Request{
 		Model:       r.Option.Model,
