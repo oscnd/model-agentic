@@ -64,6 +64,7 @@ func (r *ProviderOpenai) Call(request *Request, option *Option, output any) (*Re
 
 	// * parse response content
 	if output != nil && response.Message != nil && response.Message.Content != nil {
+		*response.Message.Content = ContentClean(*response.Message.Content)
 		if err := json.Unmarshal([]byte(*response.Message.Content), output); err != nil {
 			return nil, gut.Err(false, "failed to unmarshal response content to output", err)
 		}

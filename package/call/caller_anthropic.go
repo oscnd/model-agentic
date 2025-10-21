@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/anthropics/anthropic-sdk-go"
@@ -259,12 +258,9 @@ func (r *ProviderAnthropic) MessageContentToMessage(message *anthropic.Message, 
 		}
 	}
 
-	// * set structured output
+	// * unmarshal structured output
 	if output != nil && content != "" {
-		content = strings.TrimSpace(content)
-		content = strings.TrimPrefix(content, "```")
-		content = strings.TrimPrefix(content, "json")
-		content = strings.TrimSuffix(content, "```")
+		content = ContentClean(content)
 		if err := json.Unmarshal([]byte(content), output); err != nil {
 			gut.Debug("failed to unmarshal output content", err)
 		}
@@ -288,8 +284,7 @@ func (r *ProviderAnthropic) ToolUseBlockToToolCall(toolUseBlock anthropic.ToolUs
 		result.Arguments = toolUseBlock.Input
 	}
 
-	typeStr := "function"
-	result.Type = &typeStr
+	result.Type = gut.Ptr("function")
 
 	return result
 }
@@ -310,19 +305,9 @@ func (r *ProviderAnthropic) RequestToTools(tools []*Tool) []anthropic.ToolUnionP
 			_ = json.Unmarshal(schemaBytes, &parameters)
 		}
 
-		anthropicTool := anthropic.ToolUnionParamOfTool(parameters, "")
-
 		// * set tool name
-		if tool.Name != nil {
-			anthropicTool = anthropic.ToolUnionParamOfTool(parameters, *tool.Name)
-		}
-
-		// * set tool description
-		if tool.Description != nil {
-			// * Note: Description is set through the tool construction
-			// * The SDK doesn't seem to expose direct description setting in the union param
-		}
-
+		// TODO: append tool description for anthropic if supported
+		anthropicTool := anthropic.ToolUnionParamOfTool(parameters, *tool.Name)
 		anthropicTools = append(anthropicTools, anthropicTool)
 	}
 
