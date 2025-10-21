@@ -213,11 +213,10 @@ func (r *ProviderOpenai) ChatCompletionToResponse(completion *openai.ChatComplet
 		Message:      r.ChatCompletionMessageToMessage(choice.Message),
 	}
 
-	promptTokens := int(completion.Usage.PromptTokens)
-	completionTokens := int(completion.Usage.CompletionTokens)
 	response.Usage = &Usage{
-		InputTokens:  &promptTokens,
-		OutputTokens: &completionTokens,
+		InputTokens:  &completion.Usage.PromptTokens,
+		OutputTokens: &completion.Usage.CompletionTokens,
+		CachedTokens: gut.Ptr(int64(0)),
 	}
 
 	return response

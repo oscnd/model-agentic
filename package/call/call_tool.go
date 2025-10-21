@@ -2,6 +2,7 @@ package call
 
 import "fmt"
 
+// Tool represents a tool information attached to a request for model to choose to use
 type Tool struct {
 	Type        *string `json:"type,omitempty"`
 	Name        *string `json:"name,omitempty"`
@@ -9,6 +10,8 @@ type Tool struct {
 	InputSchema *Schema `json:"inputSchema,omitempty"`
 }
 
+// ToolCall represents a tool call information responded by the model during interaction
+// result will be filled after tool execution
 type ToolCall struct {
 	Id        *string `json:"id"`
 	Type      *string `json:"type"`

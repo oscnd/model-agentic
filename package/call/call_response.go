@@ -1,5 +1,6 @@
 package call
 
+// Response represents the response from a call to a language model or agent
 type Response struct {
 	Id           string   `json:"id,omitempty"`
 	Model        string   `json:"model"`
@@ -8,6 +9,7 @@ type Response struct {
 	Usage        *Usage   `json:"usage,omitempty"`
 }
 
+// Usage represents token usage information in a call response
 type Usage struct {
 	InputTokens  *int64 `json:"inputTokens,omitempty"`
 	OutputTokens *int64 `json:"outputTokens,omitempty"`

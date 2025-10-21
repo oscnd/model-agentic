@@ -224,11 +224,10 @@ func (r *ProviderAnthropic) MessageToResponse(message *anthropic.Message, output
 		Message:      r.MessageContentToMessage(message, output),
 	}
 
-	promptTokens := int(message.Usage.InputTokens)
-	completionTokens := int(message.Usage.OutputTokens)
 	response.Usage = &Usage{
-		InputTokens:  &promptTokens,
-		OutputTokens: &completionTokens,
+		InputTokens:  &message.Usage.InputTokens,
+		OutputTokens: &message.Usage.OutputTokens,
+		CachedTokens: gut.Ptr(message.Usage.CacheCreationInputTokens + message.Usage.CacheReadInputTokens),
 	}
 
 	return response

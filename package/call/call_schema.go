@@ -1,5 +1,6 @@
 package call
 
+// Schema represents JSON schema definitions for structured outputs
 type Schema struct {
 	Type        *string            `json:"type,omitempty"`
 	Description *string            `json:"description,omitempty"`

@@ -7,6 +7,7 @@ import (
 	"github.com/bsthun/gut"
 )
 
+// SchemaConvert converts struct instance to a Schema representation.
 func SchemaConvert(instance any) *Schema {
 	if instance == nil {
 		return nil
@@ -23,6 +24,7 @@ func SchemaConvert(instance any) *Schema {
 	return SchemaConvertFromType(typ)
 }
 
+// SchemaConvertFromType converts a reflect.Type to a Schema representation.
 func SchemaConvertFromType(typ reflect.Type) *Schema {
 	// * handle pointers
 	if typ.Kind() == reflect.Ptr {
@@ -67,6 +69,7 @@ func SchemaConvertFromType(typ reflect.Type) *Schema {
 	}
 }
 
+// SchemaConvertStructType converts a struct type to a Schema representation.
 func SchemaConvertStructType(typ reflect.Type) *Schema {
 	if typ == reflect.TypeOf(struct{}{}) {
 		return &Schema{Type: gut.Ptr("object")}
