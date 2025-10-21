@@ -261,6 +261,7 @@ func (r *ProviderAnthropic) MessageContentToMessage(message *anthropic.Message, 
 
 	// * set structured output
 	if output != nil && content != "" {
+		content = strings.TrimSpace(content)
 		content = strings.TrimPrefix(content, "```")
 		content = strings.TrimPrefix(content, "json")
 		content = strings.TrimSuffix(content, "```")

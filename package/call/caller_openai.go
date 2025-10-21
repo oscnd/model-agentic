@@ -216,7 +216,7 @@ func (r *ProviderOpenai) ChatCompletionToResponse(completion *openai.ChatComplet
 	response.Usage = &Usage{
 		InputTokens:  &completion.Usage.PromptTokens,
 		OutputTokens: &completion.Usage.CompletionTokens,
-		CachedTokens: gut.Ptr(int64(0)),
+		CachedTokens: &completion.Usage.PromptTokensDetails.CachedTokens,
 	}
 
 	return response
