@@ -1,8 +1,12 @@
 package function
 
-type CallbackInvoke struct {
+type CallbackBeforeFunctionCall struct {
 	ToolCallId  *string        `json:"toolCallId"`
 	Declaration *Declaration   `json:"declaration"`
 	Argument    map[string]any `json:"argument"`
-	Response    map[string]any `json:"response"`
+}
+
+type CallbackAfterFunctionCall struct {
+	CallbackBeforeFunctionCall
+	Result map[string]any `json:"result"`
 }

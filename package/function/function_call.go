@@ -8,51 +8,43 @@ import (
 )
 
 type Caller interface {
-	Message() []*call.Message
 	AddDeclaration(declaration *Declaration)
-	Call(request *Request, option *call.Option, output any, callback func(invoke *CallbackInvoke)) (*call.Response, *gut.ErrorInstance)
+	Call(state *State, option *call.Option, output any) (*call.Response, *gut.ErrorInstance)
 }
 
 type Call struct {
-	Caller       call.Caller     `json:"-"`
-	Declarations []*Declaration  `json:"declarations"`
-	Messages     []*call.Message `json:"messages"`
+	Caller       call.Caller    `json:"-"`
+	Option       *Option        `json:"option"`
+	Declarations []*Declaration `json:"declarations"`
 }
 
-func New(caller call.Caller) Caller {
+func New(caller call.Caller, option *Option) Caller {
 	return &Call{
 		Caller:       caller,
+		Option:       option,
 		Declarations: make([]*Declaration, 0),
 	}
-}
-
-func (r *Call) Message() []*call.Message {
-	return r.Messages
 }
 
 func (r *Call) AddDeclaration(declaration *Declaration) {
 	r.Declarations = append(r.Declarations, declaration)
 }
 
-func (r *Call) Call(request *Request, option *call.Option, output any, callback func(invoke *CallbackInvoke)) (*call.Response, *gut.ErrorInstance) {
-	// * set initial messages
-	r.Messages = request.Messages
-
+func (r *Call) Call(state *State, option *call.Option, output any) (*call.Response, *gut.ErrorInstance) {
 	// * convert function request to call request by appending function declarations as tools
 	callRequest := &call.Request{
-		Model:       request.Model,
-		Messages:    nil,
-		MaxTokens:   request.MaxTokens,
-		Temperature: request.Temperature,
-		TopP:        request.TopP,
-		TopK:        request.TopK,
-		Tools:       r.DeclarationsToTools(),
+		Model:       r.Option.Model,
+		MaxTokens:   r.Option.MaxTokens,
+		Temperature: r.Option.Temperature,
+		TopP:        r.Option.TopP,
+		TopK:        r.Option.TopK,
+		Messages:    state.Messages(),
+		Tools:       r.Tools(),
 	}
 
 	// * loop until no more tool calls
 	for {
 		// * call underlying caller
-		callRequest.Messages = r.Messages
 		response, err := r.Caller.Call(callRequest, option, output)
 		if err != nil {
 			return nil, err
@@ -61,7 +53,7 @@ func (r *Call) Call(request *Request, option *call.Option, output any, callback 
 		// * check if there are tool calls
 		if response.FinishReason != "tool_calls" && len(response.Message.ToolCalls) == 0 {
 			// * append final message
-			r.Messages = append(r.Messages, response.Message)
+			state.ToolMessages = append(state.ToolMessages, response.Message)
 
 			// * aggregate usage from all messages
 			for _, message := range callRequest.Messages {
@@ -89,13 +81,19 @@ func (r *Call) Call(request *Request, option *call.Option, output any, callback 
 			}
 
 			// * invoke callback before execution with response as nil
-			if callback != nil {
-				callback(&CallbackInvoke{
-					ToolCallId:  toolCall.Id,
-					Declaration: declaration,
-					Argument:    arguments,
-					Response:    nil,
-				})
+			callback := &CallbackBeforeFunctionCall{
+				ToolCallId:  toolCall.Id,
+				Declaration: declaration,
+				Argument:    arguments,
+			}
+			if state.OnBeforeFunctionCall != nil {
+				alter, err := state.OnBeforeFunctionCall(callback)
+				if alter != nil {
+					arguments = alter
+				}
+				if err != nil {
+					return nil, err
+				}
 			}
 
 			// * execute function to get response
@@ -105,13 +103,17 @@ func (r *Call) Call(request *Request, option *call.Option, output any, callback 
 			}
 
 			// * invoke callback after execution with response
-			if callback != nil {
-				callback(&CallbackInvoke{
-					ToolCallId:  toolCall.Id,
-					Declaration: declaration,
-					Argument:    arguments,
-					Response:    functionResponse,
+			if state.OnAfterFunctionCall != nil {
+				alter, err := state.OnAfterFunctionCall(&CallbackAfterFunctionCall{
+					CallbackBeforeFunctionCall: *callback,
+					Result:                     functionResponse,
 				})
+				if alter != nil {
+					functionResponse = alter
+				}
+				if err != nil {
+					return nil, err
+				}
 			}
 
 			// * marshal response to json
@@ -127,18 +129,18 @@ func (r *Call) Call(request *Request, option *call.Option, output any, callback 
 
 		toolMessage := &call.Message{
 			Role:      gut.Ptr("tool"),
-			Content:   nil,
+			Content:   response.Message.Content,
 			Images:    nil,
 			ToolCalls: toolCalls,
 			Usage:     response.Usage,
 		}
 
 		// * append result message
-		r.Messages = append(callRequest.Messages, toolMessage)
+		state.ToolMessages = append(callRequest.Messages, toolMessage)
 	}
 }
 
-func (r *Call) DeclarationsToTools() []*call.Tool {
+func (r *Call) Tools() []*call.Tool {
 	var tools []*call.Tool
 	for _, declaration := range r.Declarations {
 		tool := &call.Tool{
