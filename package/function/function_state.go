@@ -5,14 +5,16 @@ import (
 	"go.scnd.dev/open/model/agentic/package/call"
 )
 
-type StateBeforeFunctionCall func(callback *CallbackBeforeFunctionCall) (map[string]any, *gut.ErrorInstance)
-type StateAfterFunctionCall func(callback *CallbackAfterFunctionCall) (map[string]any, *gut.ErrorInstance)
+type StateOnBeforeFunctionCall func(callback *CallbackBeforeFunctionCall) (map[string]any, *gut.ErrorInstance)
+type StateOnAfterFunctionCall func(callback *CallbackAfterFunctionCall) (map[string]any, *gut.ErrorInstance)
+type StateOnToolMessage func(message *call.Message) *gut.ErrorInstance
 
 type State struct {
-	InitialMessages      []*call.Message         `json:"initialMessages"`
-	ToolMessages         []*call.Message         `json:"toolMessages"`
-	OnBeforeFunctionCall StateBeforeFunctionCall `json:"-"`
-	OnAfterFunctionCall  StateAfterFunctionCall  `json:"-"`
+	InitialMessages      []*call.Message           `json:"initialMessages"`
+	ToolMessages         []*call.Message           `json:"toolMessages"`
+	OnBeforeFunctionCall StateOnBeforeFunctionCall `json:"-"`
+	OnAfterFunctionCall  StateOnAfterFunctionCall  `json:"-"`
+	OnToolMessage        StateOnToolMessage        `json:"-"`
 }
 
 func NewState(initialMessages []*call.Message) *State {

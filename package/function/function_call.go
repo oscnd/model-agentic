@@ -137,6 +137,11 @@ func (r *Call) Call(state *State, option *call.Option, output any) (*call.Respon
 
 		// * append result message
 		state.ToolMessages = append(callRequest.Messages, toolMessage)
+		if state.OnToolMessage != nil {
+			if err := state.OnToolMessage(toolMessage); err != nil {
+				return nil, err
+			}
+		}
 	}
 }
 
