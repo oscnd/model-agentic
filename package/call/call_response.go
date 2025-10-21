@@ -9,7 +9,7 @@ type Response struct {
 }
 
 type Usage struct {
-	InputTokens  *int `json:"inputTokens,omitempty"`
-	OutputTokens *int `json:"outputTokens,omitempty"`
-	CachedTokens *int `json:"cachedTokens,omitempty"`
+	InputTokens  *int64 `json:"inputTokens,omitempty"`
+	OutputTokens *int64 `json:"outputTokens,omitempty"`
+	CachedTokens *int64 `json:"cachedTokens,omitempty"`
 }

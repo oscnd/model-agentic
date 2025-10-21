@@ -13,7 +13,15 @@ import (
 func main() {
 	caller := call.NewOpenai(os.Getenv("OPENAI_BASE_URL"), os.Getenv("OPENAI_API_KEY"))
 	model := os.Getenv("OPENAI_MODEL")
-	functionCall := function.New(caller)
+	maxTokens := 300
+	temperature := 0.7
+	option := &function.Option{
+		Model:       &model,
+		MaxTokens:   &maxTokens,
+		Temperature: &temperature,
+		CallOption:  new(call.Option),
+	}
+	functionCall := function.New(caller, option)
 
 	// * store magic number
 	numbers := make([]int, 0)
@@ -72,36 +80,42 @@ func main() {
 	functionCall.AddDeclaration(getMagicNumberDeclaration)
 	functionCall.AddDeclaration(checkNumberDeclaration)
 
-	// * create request to call the function
-	request := &function.Request{
-		Model:       &model,
-		MaxTokens:   gut.Ptr(300),
-		Temperature: gut.Ptr(0.7),
-		Messages: []*call.Message{
-			{
-				Role:    gut.Ptr("user"),
-				Content: gut.Ptr("Please get the magic number 2 times, then use them to check for correctness. Use the provided functions. End task when checking is success."),
-			},
+	// * create state with initial messages
+	state := function.NewState([]*call.Message{
+		{
+			Role:    gut.Ptr("user"),
+			Content: gut.Ptr("Please get the magic number 2 times, then use them to check for correctness. Use the provided functions. End task when checking is success."),
 		},
+	})
+
+	// * track invocations using callbacks
+	var invocations []*function.CallbackBeforeFunctionCall
+	var afterInvocations []*function.CallbackAfterFunctionCall
+
+	state.OnBeforeFunctionCall = func(callback *function.CallbackBeforeFunctionCall) (map[string]any, *gut.ErrorInstance) {
+		invocations = append(invocations, callback)
+		return nil, nil
 	}
 
-	// * call function with callback to track invocations
-	var invocations []*function.CallbackInvoke
-	response, err := functionCall.Call(request, new(call.Option), nil, func(invoke *function.CallbackInvoke) {
-		invocations = append(invocations, invoke)
-	})
+	state.OnAfterFunctionCall = func(callback *function.CallbackAfterFunctionCall) (map[string]any, *gut.ErrorInstance) {
+		afterInvocations = append(afterInvocations, callback)
+		return nil, nil
+	}
+
+	// * call function
+	response, err := functionCall.Call(state, nil)
 	if err != nil {
 		gut.Fatal("function call failed", err)
 	}
 
 	// * find get_magic_number invocation
-	var getMagicInvoke *function.CallbackInvoke
-	var checkNumberInvoke *function.CallbackInvoke
-	for _, inv := range invocations {
-		if *inv.Declaration.Name == "get_magic_number" && inv.Response != nil {
+	var getMagicInvoke *function.CallbackAfterFunctionCall
+	var checkNumberInvoke *function.CallbackAfterFunctionCall
+	for _, inv := range afterInvocations {
+		if *inv.Declaration.Name == "get_magic_number" {
 			getMagicInvoke = inv
 		}
-		if *inv.Declaration.Name == "check_number" && inv.Response != nil {
+		if *inv.Declaration.Name == "check_number" {
 			checkNumberInvoke = inv
 		}
 	}

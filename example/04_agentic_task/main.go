@@ -21,17 +21,17 @@ func main() {
 		Name:                   gut.Ptr("research_agent"),
 		Persona:                gut.Ptr("You are a research assistant. Your job is to gather information about specific topics and provide comprehensive summaries."),
 		Description:            gut.Ptr("Research agent for gathering information"),
-		Model:                  &model,
-		MaxTokens:              gut.Ptr(1000),
-		Temperature:            gut.Ptr(0.7),
-		TopP:                   nil,
-		TopK:                   nil,
 		AllowSubagentDispatch:  nil,
 		SubagentDispatchPrompt: nil,
 		SubagentDispatchLimit:  nil,
-		CallOption: &call.Option{
-			SchemaName:        gut.Ptr("research_agent_call"),
-			SchemaDescription: gut.Ptr("Call schema for research agent"),
+		FunctionOption: &function.Option{
+			Model:       &model,
+			MaxTokens:   gut.Ptr(1000),
+			Temperature: gut.Ptr(0.7),
+			CallOption: &call.Option{
+				SchemaName:        gut.Ptr("research_agent_call"),
+				SchemaDescription: gut.Ptr("Call schema for research agent"),
+			},
 		},
 	})
 
@@ -70,22 +70,22 @@ func main() {
 	}
 
 	// * add search function to research agent
-	researchAgent.Functions = append(researchAgent.Functions, webSearchDeclaration)
+	researchAgent.AddFunction(webSearchDeclaration)
 
 	// * create writer agent
 	writerAgent := agent.New(caller, &agent.Option{
 		Name:                   gut.Ptr("writer_agent"),
 		Persona:                gut.Ptr("You are a technical writer. Your job is to take research information and create well-structured, informative content."),
 		Description:            gut.Ptr("Writer agent for creating content from research"),
-		Model:                  &model,
-		MaxTokens:              gut.Ptr(1500),
-		Temperature:            gut.Ptr(0.8),
-		TopP:                   nil,
-		TopK:                   nil,
 		AllowSubagentDispatch:  nil,
 		SubagentDispatchPrompt: nil,
 		SubagentDispatchLimit:  nil,
-		CallOption:             new(call.Option),
+		FunctionOption: &function.Option{
+			Model:       &model,
+			MaxTokens:   gut.Ptr(1500),
+			Temperature: gut.Ptr(0.8),
+			CallOption:  new(call.Option),
+		},
 	})
 
 	// * add format content function to writer agent
@@ -124,31 +124,43 @@ func main() {
 	}
 
 	// * add format function to writer agent
-	writerAgent.Functions = append(writerAgent.Functions, formatContentDeclaration)
+	writerAgent.AddFunction(formatContentDeclaration)
 
 	// * add writer as subagent to research agent
-	researchAgent.Subagents = append(researchAgent.Subagents, writerAgent)
+	researchAgent.AddSubagent(writerAgent)
 
 	// * define the task
 	task := "Research the topic of 'Artificial Intelligence' and create a comprehensive summary. First gather information using web search, then delegate to the writer agent to format the content properly."
 
-	// * track function invocations
-	var invocations []*function.CallbackInvoke
+	// * create agent state
+	state := researchAgent.NewState(&task)
+
+	// * track function invocations using callbacks
+	var invocations []*function.CallbackBeforeFunctionCall
+	var afterInvocations []*function.CallbackAfterFunctionCall
+
+	state.FunctionState.OnBeforeFunctionCall = func(callback *function.CallbackBeforeFunctionCall) (map[string]any, *gut.ErrorInstance) {
+		invocations = append(invocations, callback)
+		return nil, nil
+	}
+
+	state.FunctionState.OnAfterFunctionCall = func(callback *function.CallbackAfterFunctionCall) (map[string]any, *gut.ErrorInstance) {
+		afterInvocations = append(afterInvocations, callback)
+		return nil, nil
+	}
 
 	// * call the research agent
-	response, err := researchAgent.Call(&task, nil, func(invoke *function.CallbackInvoke) {
-		invocations = append(invocations, invoke)
-	})
+	response, err := researchAgent.Call(state, nil)
 	if err != nil {
 		gut.Fatal("agent call failed", err)
 	}
 
 	// * display results
 	spew.Dump("Agent Response:", response)
-	spew.Dump("Function Invocations:", len(invocations))
+	spew.Dump("Function Invocations:", len(afterInvocations))
 
 	// * show invocation details
-	for i, invoke := range invocations {
+	for i, invoke := range afterInvocations {
 		println("\n--- Invocation", i+1, "---")
 		println("Function:", *invoke.Declaration.Name)
 		spew.Dump(invoke)

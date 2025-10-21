@@ -6,7 +6,7 @@ import (
 	"go.scnd.dev/open/model/agentic/package/function"
 )
 
-func (r *Agent) Function(caller function.Caller, callback func(invoke *function.CallbackInvoke)) *function.Declaration {
+func (r *Agent) Function(state *State) *function.Declaration {
 	type Arguments struct {
 		Task           *string `json:"task" description:"The task or question to be processed by the subagent" validate:"required"`
 		IncludeContext *bool   `json:"includeContext" description:"Whether to include the parent agent's context to subagent" validate:"required"`
@@ -17,12 +17,33 @@ func (r *Agent) Function(caller function.Caller, callback func(invoke *function.
 		Description: r.Option.Description,
 		Argument:    call.SchemaConvert(new(Arguments)),
 		Func: func(args map[string]any) (map[string]any, *gut.ErrorInstance) {
-			task := args["task"].(string)
-			includeContext := args["includeContext"].(bool)
-			agent := New(r.Caller, r.Option)
+			// * validate arguments
+			taskRaw, exists := args["task"]
+			if !exists {
+				return nil, gut.Err(false, "task argument is required", nil)
+			}
+			task, ok := taskRaw.(string)
+			if !ok {
+				return nil, gut.Err(false, "task must be a string", nil)
+			}
 
-			if includeContext {
-				for _, m := range caller.Message() {
+			includeContextRaw, exists := args["includeContext"]
+			if !exists {
+				return nil, gut.Err(false, "includeContext argument is required", nil)
+			}
+			includeContext, ok := includeContextRaw.(bool)
+			if !ok {
+				return nil, gut.Err(false, "includeContext must be a boolean", nil)
+			}
+
+			agent := New(r.Caller, r.Option)
+			agentState := agent.NewState(&task)
+			agentState.FunctionState.Inherit(state.FunctionState)
+
+			// * include context from parent state
+			if includeContext && state != nil && state.FunctionState != nil {
+				messages := state.FunctionState.Messages()
+				for _, m := range messages {
 					if m.Content != nil && *m.Role != "system" {
 						agent.ContextPush(*m.Content)
 					}
@@ -33,7 +54,7 @@ func (r *Agent) Function(caller function.Caller, callback func(invoke *function.
 			}
 
 			var output map[string]any
-			if _, err := agent.Call(&task, &output, callback); err != nil {
+			if _, err := agent.Call(agentState, &output); err != nil {
 				return nil, gut.Err(false, "agent function call error", err)
 			}
 			return output, nil

@@ -30,3 +30,9 @@ func (r *State) Messages() []*call.Message {
 	messages = append(messages, r.ToolMessages...)
 	return messages
 }
+
+func (r *State) Inherit(state *State) {
+	r.OnBeforeFunctionCall = state.OnBeforeFunctionCall
+	r.OnAfterFunctionCall = state.OnAfterFunctionCall
+	r.OnToolMessage = state.OnToolMessage
+}
