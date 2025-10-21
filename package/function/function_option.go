@@ -2,6 +2,7 @@ package function
 
 import "go.scnd.dev/open/model/agentic/package/call"
 
+// Option contains configuration for function calling, extended call options.
 type Option struct {
 	Model       *string      `json:"model"`
 	MaxTokens   *int         `json:"maxTokens"`

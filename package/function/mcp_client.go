@@ -10,11 +10,13 @@ import (
 	"github.com/mark3labs/mcp-go/mcp"
 )
 
+// McpClient wraps an MCP client for tool execution
 type McpClient struct {
 	client   client.MCPClient
 	toolName *string
 }
 
+// NewMcpClient creates a new MCP client wrapper
 func NewMcpClient(r client.MCPClient, toolName *string) *McpClient {
 	return &McpClient{
 		client:   r,
@@ -22,6 +24,7 @@ func NewMcpClient(r client.MCPClient, toolName *string) *McpClient {
 	}
 }
 
+// Execute calls the MCP tool with the provided arguments
 func (r *McpClient) Execute(args map[string]any) (map[string]any, *gut.ErrorInstance) {
 	ctx := context.Background()
 

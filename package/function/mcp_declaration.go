@@ -9,6 +9,7 @@ import (
 	"go.scnd.dev/open/model/agentic/package/call"
 )
 
+// McpDeclarations fetches function declarations from an MCP server
 func McpDeclarations(url string) ([]*Declaration, error) {
 	ctx := context.Background()
 
@@ -80,6 +81,7 @@ func McpDeclarations(url string) ([]*Declaration, error) {
 	return declarations, nil
 }
 
+// McpSchemaToCallSchema converts MCP tool input schema to call schema
 func McpSchemaToCallSchema(inputSchema mcp.ToolInputSchema) (*call.Schema, error) {
 	schema := new(call.Schema)
 

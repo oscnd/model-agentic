@@ -1,3 +1,5 @@
+// Package function provides function calling capabilities with state management,
+// it handles function declarations, looped function calling execution, and callback hooks.
 package function
 
 import (
@@ -7,8 +9,11 @@ import (
 	"go.scnd.dev/open/model/agentic/package/call"
 )
 
+// Caller defines the interface for function calling
 type Caller interface {
+	// AddDeclaration registers a new function declaration
 	AddDeclaration(declaration *Declaration)
+	// Call executes function calls with state management and callbacks
 	Call(state *State, output any) (*call.Response, *gut.ErrorInstance)
 }
 
@@ -26,10 +31,13 @@ func New(caller call.Caller, option *Option) Caller {
 	}
 }
 
+// AddDeclaration appends a new function declaration to the registry
 func (r *Call) AddDeclaration(declaration *Declaration) {
 	r.Declarations = append(r.Declarations, declaration)
 }
 
+// Call executes the function calling loop with state management and callbacks
+// during execution, state passed can use to get current messages and set callbacks
 func (r *Call) Call(state *State, output any) (*call.Response, *gut.ErrorInstance) {
 	// * convert function request to call request by appending function declarations as tools
 	callRequest := &call.Request{
@@ -146,6 +154,7 @@ func (r *Call) Call(state *State, output any) (*call.Response, *gut.ErrorInstanc
 	}
 }
 
+// Tools converts function declarations to call.Tool format
 func (r *Call) Tools() []*call.Tool {
 	var tools []*call.Tool
 	for _, declaration := range r.Declarations {
@@ -160,6 +169,7 @@ func (r *Call) Tools() []*call.Tool {
 	return tools
 }
 
+// GetDeclaration finds a function declaration by name
 func (r *Call) GetDeclaration(name *string) *Declaration {
 	if name == nil {
 		return nil
