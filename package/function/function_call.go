@@ -140,11 +140,13 @@ func (r *Call) Call(state *State, output any) (*call.Response, *gut.ErrorInstanc
 		}
 
 		toolMessage := &call.Message{
-			Role:      gut.Ptr("tool"),
-			Content:   response.Message.Content,
-			Images:    nil,
-			ToolCalls: toolCalls,
-			Usage:     response.Usage,
+			Role:        gut.Ptr("tool"),
+			Content:     response.Message.Content,
+			Image:       nil,
+			ImageUrl:    nil,
+			ImageDetail: nil,
+			ToolCalls:   toolCalls,
+			Usage:       response.Usage,
 		}
 
 		// * append result message

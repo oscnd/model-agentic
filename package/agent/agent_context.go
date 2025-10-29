@@ -8,9 +8,12 @@ import (
 // ContextPush pushes additional context to the agent's message history
 func (r *Agent) ContextPush(content string) {
 	r.Messages = append(r.Messages, &call.Message{
-		Role:      gut.Ptr("system"),
-		Content:   gut.Ptr("Additional context: " + content),
-		Images:    nil,
-		ToolCalls: nil,
+		Role:        gut.Ptr("system"),
+		Content:     gut.Ptr("Additional context: " + content),
+		Image:       nil,
+		ImageUrl:    nil,
+		ImageDetail: nil,
+		ToolCalls:   nil,
+		Usage:       nil,
 	})
 }

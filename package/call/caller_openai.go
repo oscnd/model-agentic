@@ -155,7 +155,7 @@ func (r *ProviderOpenai) UserMessageToChatParam(message *Message) openai.ChatCom
 	}
 
 	// * handle image content
-	if len(message.Images) > 0 {
+	if len(message.Image) > 0 || message.ImageUrl != nil {
 		var contentParts []openai.ChatCompletionContentPartUnionParam
 
 		// * add text content if present
@@ -163,11 +163,18 @@ func (r *ProviderOpenai) UserMessageToChatParam(message *Message) openai.ChatCom
 			contentParts = append(contentParts, openai.TextContentPart(*message.Content))
 		}
 
-		// * add image content
-		imageData := base64.StdEncoding.EncodeToString(message.Images)
-		imageUrl := fmt.Sprintf("data:image/png;base64,%s", imageData)
+		// * construct image url
+		var imageUrl string
+		if len(message.Image) > 0 {
+			imageData := base64.StdEncoding.EncodeToString(message.Image)
+			imageUrl = fmt.Sprintf("data:image/png;base64,%s", imageData)
+		}
+		if message.ImageUrl != nil {
+			imageUrl = *message.ImageUrl
+		}
 		contentParts = append(contentParts, openai.ImageContentPart(openai.ChatCompletionContentPartImageImageURLParam{
-			URL: imageUrl,
+			URL:    imageUrl,
+			Detail: gut.Val(message.ImageDetail),
 		}))
 
 		return openai.ChatCompletionMessageParamUnion{

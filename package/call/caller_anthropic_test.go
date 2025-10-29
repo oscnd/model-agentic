@@ -16,6 +16,10 @@ func TestAnthropicCaller(t *testing.T) {
 	// * create anthropic caller
 	caller := NewAnthropic(os.Getenv("ANTHROPIC_BASE_URL"), os.Getenv("ANTHROPIC_API_KEY"))
 	model := os.Getenv("ANTHROPIC_MODEL")
+	visionModel := os.Getenv("ANTHROPIC_VISION_MODEL")
+	if visionModel == "" {
+		visionModel = model
+	}
 
 	// * test simple text message
 	t.Run("SimpleTextMessage", func(t *testing.T) {
@@ -73,13 +77,13 @@ func TestAnthropicCaller(t *testing.T) {
 		_ = png.Encode(&buf, img)
 
 		request := &Request{
-			Model:     &model,
+			Model:     &visionModel,
 			MaxTokens: &maxTokens,
 			Messages: []*Message{
 				{
 					Role:    gut.Ptr("user"),
 					Content: gut.Ptr("What do you see in this image?"),
-					Images:  buf.Bytes(),
+					Image:   buf.Bytes(),
 				},
 			},
 		}

@@ -7,5 +7,6 @@ func ContentClean(content string) string {
 	content = strings.TrimPrefix(content, "```")
 	content = strings.TrimPrefix(content, "json")
 	content = strings.TrimSuffix(content, "```")
+	content = strings.TrimSpace(content)
 	return content
 }

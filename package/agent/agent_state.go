@@ -19,18 +19,24 @@ func (r *Agent) NewState(task *string) *State {
 
 	// * create system message
 	systemMessage := &call.Message{
-		Role:      gut.Ptr("system"),
-		Content:   r.Option.Persona,
-		Images:    nil,
-		ToolCalls: nil,
+		Role:        gut.Ptr("system"),
+		Content:     r.Option.Persona,
+		Image:       nil,
+		ImageUrl:    nil,
+		ImageDetail: nil,
+		ToolCalls:   nil,
+		Usage:       nil,
 	}
 
 	// * create user message
 	userMessage := &call.Message{
-		Role:      gut.Ptr("user"),
-		Content:   task,
-		Images:    nil,
-		ToolCalls: nil,
+		Role:        gut.Ptr("user"),
+		Content:     task,
+		Image:       nil,
+		ImageUrl:    nil,
+		ImageDetail: nil,
+		ToolCalls:   nil,
+		Usage:       nil,
 	}
 
 	messages = append(messages, systemMessage, userMessage)

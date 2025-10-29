@@ -20,6 +20,7 @@ func NewAnthropic(baseUrl string, apiKey string) Caller {
 	client := anthropic.NewClient(
 		option.WithBaseURL(baseUrl),
 		option.WithAPIKey(apiKey),
+		option.WithAuthToken(apiKey),
 	)
 
 	return &ProviderAnthropic{
@@ -140,7 +141,7 @@ func (r *ProviderAnthropic) UserMessageToMessageParam(message *Message) anthropi
 	}
 
 	// * handle image content
-	if len(message.Images) > 0 {
+	if len(message.Image) > 0 || message.ImageUrl != nil {
 		var contentBlocks []anthropic.ContentBlockParamUnion
 
 		// * add text content if present
@@ -149,12 +150,20 @@ func (r *ProviderAnthropic) UserMessageToMessageParam(message *Message) anthropi
 		}
 
 		// * add image content
-		imageData := base64.StdEncoding.EncodeToString(message.Images)
-		imageSource := anthropic.Base64ImageSourceParam{
-			MediaType: anthropic.Base64ImageSourceMediaTypeImagePNG,
-			Data:      imageData,
+		var imageBlock anthropic.ContentBlockParamUnion
+		if len(message.Image) > 0 {
+			imageData := base64.StdEncoding.EncodeToString(message.Image)
+			imageBlock = anthropic.NewImageBlock(anthropic.Base64ImageSourceParam{
+				MediaType: anthropic.Base64ImageSourceMediaTypeImagePNG,
+				Data:      imageData,
+			})
 		}
-		contentBlocks = append(contentBlocks, anthropic.NewImageBlock(imageSource))
+		if message.ImageUrl != nil {
+			imageBlock = anthropic.NewImageBlock(anthropic.URLImageSourceParam{
+				URL: *message.ImageUrl,
+			})
+		}
+		contentBlocks = append(contentBlocks, imageBlock)
 
 		return anthropic.NewUserMessage(contentBlocks...)
 	}
@@ -235,10 +244,13 @@ func (r *ProviderAnthropic) MessageToResponse(message *anthropic.Message, output
 func (r *ProviderAnthropic) MessageContentToMessage(message *anthropic.Message, output any) *Message {
 	role := "assistant"
 	result := &Message{
-		Role:      &role,
-		Content:   nil,
-		Images:    nil,
-		ToolCalls: nil,
+		Role:        &role,
+		Content:     nil,
+		Image:       nil,
+		ImageUrl:    nil,
+		ImageDetail: nil,
+		ToolCalls:   nil,
+		Usage:       nil,
 	}
 
 	var content string
