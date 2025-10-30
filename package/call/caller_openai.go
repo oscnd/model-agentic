@@ -42,12 +42,12 @@ func (r *ProviderOpenai) Call(request *Request, option *Option, output any) (*Re
 	var err error
 
 	for i := 0; i < maxRetries; i++ {
-		chatCompletion, err = (*r.Client).Chat.Completions.New(context.Background(), chatParams)
+		chatCompletion, err = r.Client.Chat.Completions.New(context.Background(), chatParams)
 		if err == nil {
 			break
 		}
 		if i < maxRetries-1 {
-			gut.Debug("openai retry %d due to error: %v", i+1, err)
+			gut.Debug("openai retry %d due to error: %s", i+1, err)
 			time.Sleep(time.Duration(i+1) * time.Second)
 		}
 	}
