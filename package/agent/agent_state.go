@@ -19,7 +19,7 @@ func (r *Agent) NewState(task *string) *State {
 
 	// * create system message
 	systemMessage := &call.Message{
-		Role:        gut.Ptr("system"),
+		Role:        gut.Ptr(call.RoleSystem),
 		Content:     r.Option.Persona,
 		Image:       nil,
 		ImageUrl:    nil,
@@ -30,7 +30,7 @@ func (r *Agent) NewState(task *string) *State {
 
 	// * create user message
 	userMessage := &call.Message{
-		Role:        gut.Ptr("user"),
+		Role:        gut.Ptr(call.RoleUser),
 		Content:     task,
 		Image:       nil,
 		ImageUrl:    nil,

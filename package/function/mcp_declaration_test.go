@@ -64,7 +64,7 @@ func TestMcpDeclarations(t *testing.T) {
 		// * create state with initial messages
 		state := NewState([]*call.Message{
 			{
-				Role:    gut.Ptr("user"),
+				Role:    gut.Ptr(call.RoleUser),
 				Content: gut.Ptr("Please search for the package name of https://pkg.go.dev/go.scnd.dev/open/model/agentic using the available functions. Tell me what the package name is."),
 			},
 		})

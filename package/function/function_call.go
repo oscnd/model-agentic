@@ -140,7 +140,7 @@ func (r *Call) Call(state *State, output any) (*call.Response, *gut.ErrorInstanc
 		}
 
 		toolMessage := &call.Message{
-			Role:        gut.Ptr("tool"),
+			Role:        gut.Ptr(call.RoleTool),
 			Content:     response.Message.Content,
 			Image:       nil,
 			ImageUrl:    nil,

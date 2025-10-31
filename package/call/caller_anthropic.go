@@ -94,6 +94,19 @@ func (r *ProviderAnthropic) RequestToMessageParams(request *Request, output any)
 		messageParams.TopP = anthropic.Float(*request.TopP)
 	}
 
+	// * set reasoning parameters
+	// TODO: anthropic sdk not support reasoning directly
+	if request.ReasoningEffort != nil {
+		switch *request.ReasoningEffort {
+		case ReasoningEffortLow:
+			messageParams.Thinking = anthropic.ThinkingConfigParamOfEnabled(0)
+		case ReasoningEffortMedium:
+			messageParams.Thinking = anthropic.ThinkingConfigParamOfEnabled(256)
+		case ReasoningEffortHigh:
+			messageParams.Thinking = anthropic.ThinkingConfigParamOfEnabled(512)
+		}
+	}
+
 	// * set tools if provided
 	if len(request.Tools) > 0 {
 		messageParams.Tools = r.RequestToTools(request.Tools)
@@ -244,7 +257,7 @@ func (r *ProviderAnthropic) MessageToResponse(message *anthropic.Message, output
 func (r *ProviderAnthropic) MessageContentToMessage(message *anthropic.Message, output any) *Message {
 	role := "assistant"
 	result := &Message{
-		Role:        &role,
+		Role:        (*Role)(&role),
 		Content:     nil,
 		Image:       nil,
 		ImageUrl:    nil,

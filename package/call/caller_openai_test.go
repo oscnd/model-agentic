@@ -2,6 +2,7 @@ package call
 
 import (
 	"bytes"
+	"encoding/json"
 	"image"
 	"image/color"
 	"image/png"
@@ -27,16 +28,17 @@ func TestOpenaiCaller(t *testing.T) {
 		temperature := 1.0
 
 		request := &Request{
-			Model:       &model,
-			MaxTokens:   &maxTokens,
-			Temperature: &temperature,
+			Model:           &model,
+			MaxTokens:       &maxTokens,
+			Temperature:     &temperature,
+			ReasoningEffort: gut.Ptr(ReasoningEffortLow),
 			Messages: []*Message{
 				{
-					Role:    gut.Ptr("system"),
+					Role:    gut.Ptr(RoleSystem),
 					Content: gut.Ptr("You are a helpful assistant."),
 				},
 				{
-					Role:    gut.Ptr("user"),
+					Role:    gut.Ptr(RoleUser),
 					Content: gut.Ptr("Hello, how are you?"),
 				},
 			},
@@ -71,7 +73,7 @@ func TestOpenaiCaller(t *testing.T) {
 			MaxTokens: &maxTokens,
 			Messages: []*Message{
 				{
-					Role:    gut.Ptr("user"),
+					Role:    gut.Ptr(RoleUser),
 					Content: gut.Ptr("What do you see in this image?"),
 					Image:   buf.Bytes(),
 				},
@@ -96,7 +98,7 @@ func TestOpenaiCaller(t *testing.T) {
 			MaxTokens: &maxTokens,
 			Messages: []*Message{
 				{
-					Role:    gut.Ptr("user"),
+					Role:    gut.Ptr(RoleUser),
 					Content: gut.Ptr("What's current weather in New York?"),
 				},
 			},
@@ -143,14 +145,15 @@ func TestOpenaiCaller(t *testing.T) {
 	t.Run("StructuredOutput", func(t *testing.T) {
 		maxTokens := 200
 		output := new(Person)
+		schema, _ := json.Marshal(SchemaConvert(output))
 
 		request := &Request{
 			Model:     &model,
 			MaxTokens: &maxTokens,
 			Messages: []*Message{
 				{
-					Role:    gut.Ptr("user"),
-					Content: gut.Ptr("Generate information about a person named John who is 30 years old, lives in New York, and has an active status. Return in JSON format."),
+					Role:    gut.Ptr(RoleUser),
+					Content: gut.Ptr("Generate information about a person named John who is 30 years old, lives in New York, and has an active status. Return in format: " + string(schema)),
 				},
 			},
 		}

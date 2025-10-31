@@ -21,11 +21,12 @@ func main() {
 	}
 
 	request := &call.Request{
-		Model:     gut.Ptr(os.Getenv("OPENAI_MODEL")),
-		MaxTokens: gut.Ptr(1024),
+		Model:           gut.Ptr(os.Getenv("OPENAI_MODEL")),
+		MaxTokens:       gut.Ptr(1024),
+		ReasoningEffort: gut.Ptr(call.ReasoningEffortLow),
 		Messages: []*call.Message{
 			{
-				Role:    gut.Ptr("user"),
+				Role:    gut.Ptr(call.RoleUser),
 				Content: gut.Ptr("Generate information about a person named John who is 30 years old, lives in Thai."),
 			},
 		},

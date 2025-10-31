@@ -37,11 +37,11 @@ func TestAnthropicCaller(t *testing.T) {
 			Temperature: &temperature,
 			Messages: []*Message{
 				{
-					Role:    gut.Ptr("system"),
+					Role:    gut.Ptr(RoleSystem),
 					Content: gut.Ptr("You are a helpful assistant."),
 				},
 				{
-					Role:    gut.Ptr("user"),
+					Role:    gut.Ptr(RoleUser),
 					Content: gut.Ptr("Hello, how are you?"),
 				},
 			},
@@ -81,7 +81,7 @@ func TestAnthropicCaller(t *testing.T) {
 			MaxTokens: &maxTokens,
 			Messages: []*Message{
 				{
-					Role:    gut.Ptr("user"),
+					Role:    gut.Ptr(RoleUser),
 					Content: gut.Ptr("What do you see in this image?"),
 					Image:   buf.Bytes(),
 				},
@@ -114,7 +114,7 @@ func TestAnthropicCaller(t *testing.T) {
 			MaxTokens: &maxTokens,
 			Messages: []*Message{
 				{
-					Role:    gut.Ptr("user"),
+					Role:    gut.Ptr(RoleUser),
 					Content: gut.Ptr("What's current weather in New York?"),
 				},
 			},
@@ -170,7 +170,7 @@ func TestAnthropicCaller(t *testing.T) {
 			MaxTokens: &maxTokens,
 			Messages: []*Message{
 				{
-					Role:    gut.Ptr("user"),
+					Role:    gut.Ptr(RoleUser),
 					Content: gut.Ptr("Generate information about a person named John who is 30 years old, lives in New York, and has an active status. Return in JSON format."),
 				},
 			},

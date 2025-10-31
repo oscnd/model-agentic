@@ -103,6 +103,11 @@ func (r *ProviderOpenai) RequestToChatParams(request *Request, option *Option, o
 		chatParams.Tools = r.RequestToTools(request.Tools)
 	}
 
+	// * set reasoning effort if provided
+	if request.ReasoningEffort != nil {
+		chatParams.ReasoningEffort = shared.ReasoningEffort(*request.ReasoningEffort)
+	}
+
 	// * set output format if output schema is provided
 	if output != nil {
 		schema := SchemaConvert(output)
@@ -235,7 +240,7 @@ func (r *ProviderOpenai) ChatCompletionMessageToMessage(message openai.ChatCompl
 
 	if message.Role != "" {
 		role := string(message.Role)
-		result.Role = &role
+		result.Role = (*Role)(&role)
 	}
 
 	if message.Content != "" {
@@ -250,7 +255,7 @@ func (r *ProviderOpenai) ChatCompletionMessageToMessage(message openai.ChatCompl
 		result.ToolCalls = toolCalls
 	}
 
-	// * handle reasoning conten
+	// * handle reasoning content
 	if message.Content != "" {
 		result.Content = &message.Content
 	}

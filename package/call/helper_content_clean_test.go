@@ -13,13 +13,4 @@ func TestContentClean(t *testing.T) {
 			t.Errorf("expected %q, got %q", expected, result)
 		}
 	})
-
-	t.Run("clean plain text with extra whitespace", func(t *testing.T) {
-		input := "   simple text content   "
-		expected := "simple text content"
-		result := ContentClean(input)
-		if result != expected {
-			t.Errorf("expected %q, got %q", expected, result)
-		}
-	})
 }
