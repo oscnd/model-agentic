@@ -38,6 +38,8 @@ func (r *Agent) Function(state *State) *function.Declaration {
 			}
 
 			agent := New(r.Caller, r.Option)
+			agent.Functions = r.Functions
+			agent.Subagents = r.Subagents
 			agentState := agent.NewState(&task)
 			agentState.FunctionState.Inherit(state.FunctionState)
 
@@ -56,7 +58,7 @@ func (r *Agent) Function(state *State) *function.Declaration {
 
 			var output map[string]any
 			if _, err := agent.Call(agentState, &output); err != nil {
-				return nil, gut.Err(false, "agent function call error", err)
+				return nil, gut.Err(false, "agent function call error: "+err.Error(), err)
 			}
 			return output, nil
 		},
