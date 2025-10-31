@@ -34,7 +34,7 @@ func (r *ProviderAnthropic) Call(request *Request, option *Option, output any) (
 	}
 
 	// * convert request to anthropic message parameters
-	messageParams := r.RequestToMessageParams(request, output)
+	messageParams := r.RequestToMessageParams(request, option, output)
 
 	// * call anthropic api with retry logic
 	maxRetries := 3
@@ -65,7 +65,7 @@ func (r *ProviderAnthropic) Call(request *Request, option *Option, output any) (
 	return response, nil
 }
 
-func (r *ProviderAnthropic) RequestToMessageParams(request *Request, output any) anthropic.MessageNewParams {
+func (r *ProviderAnthropic) RequestToMessageParams(request *Request, option *Option, output any) anthropic.MessageNewParams {
 	// * convert messages
 	messages := r.RequestToMessages(request)
 
@@ -110,6 +110,11 @@ func (r *ProviderAnthropic) RequestToMessageParams(request *Request, output any)
 	// * set tools if provided
 	if len(request.Tools) > 0 {
 		messageParams.Tools = r.RequestToTools(request.Tools)
+	}
+
+	// * set extra fields from option
+	if option.ExtraFields != nil {
+		messageParams.SetExtraFields(option.ExtraFields)
 	}
 
 	// * set response format if output is provided

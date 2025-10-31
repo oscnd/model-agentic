@@ -98,14 +98,19 @@ func (r *ProviderOpenai) RequestToChatParams(request *Request, option *Option, o
 		chatParams.TopP = openai.Float(*request.TopP)
 	}
 
+	// * set reasoning effort if provided
+	if request.ReasoningEffort != nil {
+		chatParams.ReasoningEffort = shared.ReasoningEffort(*request.ReasoningEffort)
+	}
+
 	// * set tools if provided
 	if len(request.Tools) > 0 {
 		chatParams.Tools = r.RequestToTools(request.Tools)
 	}
 
-	// * set reasoning effort if provided
-	if request.ReasoningEffort != nil {
-		chatParams.ReasoningEffort = shared.ReasoningEffort(*request.ReasoningEffort)
+	// * set extra fields from option
+	if option.ExtraFields != nil {
+		chatParams.SetExtraFields(option.ExtraFields)
 	}
 
 	// * set output format if output schema is provided
