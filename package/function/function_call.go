@@ -83,13 +83,21 @@ func (r *Call) Call(state *State, output any) (*call.Response, *gut.ErrorInstanc
 			// * find matching declaration
 			declaration := r.GetDeclaration(toolCall.Name)
 			if declaration == nil {
-				return nil, gut.Err(false, "declaration not found for tool: "+gut.Val(toolCall.Name), nil)
+				toolCall.Result, _ = json.Marshal(map[string]any{
+					"error": "declaration not found for tool: " + gut.Val(toolCall.Name),
+				})
+				toolCalls = append(toolCalls, toolCall)
+				continue
 			}
 
 			// * unmarshal arguments from json
 			var arguments map[string]any
 			if err := json.Unmarshal(toolCall.Arguments, &arguments); err != nil {
-				return nil, gut.Err(false, "failed to unmarshal tool call arguments", err)
+				toolCall.Result, _ = json.Marshal(map[string]any{
+					"error": "failed to unmarshal arguments: " + err.Error(),
+				})
+				toolCalls = append(toolCalls, toolCall)
+				continue
 			}
 
 			// * invoke callback before execution with response as nil
@@ -111,7 +119,11 @@ func (r *Call) Call(state *State, output any) (*call.Response, *gut.ErrorInstanc
 			// * execute function to get response
 			functionResponse, funcErr := declaration.Func(arguments)
 			if funcErr != nil {
-				return nil, funcErr
+				toolCall.Result, _ = json.Marshal(map[string]any{
+					"error": funcErr.Error(),
+				})
+				toolCalls = append(toolCalls, toolCall)
+				continue
 			}
 
 			// * invoke callback after execution with response
@@ -131,7 +143,11 @@ func (r *Call) Call(state *State, output any) (*call.Response, *gut.ErrorInstanc
 			// * marshal response to json
 			responseJson, err := json.Marshal(functionResponse)
 			if err != nil {
-				return nil, gut.Err(false, "failed to marshal function response to json", err)
+				toolCall.Result, _ = json.Marshal(map[string]any{
+					"error": "failed to marshal function response: " + err.Error(),
+				})
+				toolCalls = append(toolCalls, toolCall)
+				continue
 			}
 
 			// * create tool result message

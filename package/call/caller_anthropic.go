@@ -338,6 +338,7 @@ func (r *ProviderAnthropic) RequestToTools(tools []*Tool) []anthropic.ToolUnionP
 		// * set tool name
 		// TODO: append tool description for anthropic if supported
 		anthropicTool := anthropic.ToolUnionParamOfTool(parameters, *tool.Name)
+		anthropicTool.OfTool.Type = "function"
 		anthropicTools = append(anthropicTools, anthropicTool)
 	}
 

@@ -56,11 +56,13 @@ func (r *Agent) Function(state *State) *function.Declaration {
 				}
 			}
 
-			var output map[string]any
-			if _, err := agent.Call(agentState, &output); err != nil {
+			response, err := agent.Call(agentState, nil)
+			if err != nil {
 				return nil, gut.Err(false, "agent function call error: "+err.Error(), err)
 			}
-			return output, nil
+			return map[string]any{
+				"response": response.Message.Content,
+			}, nil
 		},
 	}
 }
