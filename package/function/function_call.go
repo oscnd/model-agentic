@@ -64,14 +64,23 @@ func (r *Call) Call(state *State, output any) (*call.Response, *gut.ErrorInstanc
 			// * append final message
 			callRequest.Messages = append(callRequest.Messages, response.Message)
 
+			// * construct usage field
+			response.TotalUsage = &call.Usage{
+				InputTokens:  gut.Ptr[int64](0),
+				OutputTokens: gut.Ptr[int64](0),
+				CachedTokens: gut.Ptr[int64](0),
+			}
+
 			// * aggregate usage from all messages
 			for _, message := range callRequest.Messages {
-				if message.Usage == nil {
+				m, ok := message.(*call.AssistantMessage)
+				if !ok {
 					continue
 				}
-				*response.Usage.InputTokens += *message.Usage.InputTokens
-				*response.Usage.OutputTokens += *message.Usage.OutputTokens
-				*response.Usage.CachedTokens += *message.Usage.CachedTokens
+
+				*response.TotalUsage.InputTokens += *m.Usage.InputTokens
+				*response.TotalUsage.OutputTokens += *m.Usage.OutputTokens
+				*response.TotalUsage.CachedTokens += *m.Usage.CachedTokens
 			}
 
 			return response, nil
@@ -155,14 +164,10 @@ func (r *Call) Call(state *State, output any) (*call.Response, *gut.ErrorInstanc
 			toolCalls = append(toolCalls, toolCall)
 		}
 
-		toolMessage := &call.Message{
-			Role:        gut.Ptr(call.RoleTool),
-			Content:     response.Message.Content,
-			Image:       nil,
-			ImageUrl:    nil,
-			ImageDetail: nil,
-			ToolCalls:   toolCalls,
-			Usage:       response.Usage,
+		toolMessage := &call.AssistantMessage{
+			Content:   response.Message.Content,
+			ToolCalls: toolCalls,
+			Usage:     response.Message.Usage,
 		}
 
 		// * append result message

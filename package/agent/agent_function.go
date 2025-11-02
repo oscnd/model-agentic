@@ -46,12 +46,20 @@ func (r *Agent) Function(state *State) *function.Declaration {
 			// * include context from parent state
 			if includeContext && state != nil && state.FunctionState != nil {
 				messages := state.FunctionState.Messages()
-				for _, m := range messages {
-					if m.Content != nil && *m.Role != "system" {
+				for _, message := range messages {
+					switch message.(type) {
+					case *call.SystemMessage:
+						m := message.(*call.SystemMessage)
 						agent.ContextPush(*m.Content)
-					}
-					for _, toolCall := range m.ToolCalls {
-						agent.ContextPush(toolCall.String())
+					case *call.UserMessage:
+						m := message.(*call.UserMessage)
+						agent.ContextPush(*m.Content)
+					case *call.AssistantMessage:
+						m := message.(*call.AssistantMessage)
+						agent.ContextPush(*m.Content)
+						for _, toolCall := range m.ToolCalls {
+							agent.ContextPush(toolCall.String())
+						}
 					}
 				}
 			}

@@ -135,22 +135,27 @@ func (r *ProviderOpenai) RequestToChatParams(request *Request, option *Option, o
 func (r *ProviderOpenai) RequestToMessages(request *Request) []openai.ChatCompletionMessageParamUnion {
 	var messages []openai.ChatCompletionMessageParamUnion
 
-	for _, msg := range request.Messages {
-		if msg == nil || msg.Role == nil {
+	for _, message := range request.Messages {
+		if message == nil {
 			continue
 		}
 
-		switch *msg.Role {
-		case "system":
-			if msg.Content != nil {
-				messages = append(messages, openai.SystemMessage(*msg.Content))
+		switch message.(type) {
+		case *SystemMessage:
+			m := message.(*SystemMessage)
+			if m.Content != nil {
+				messages = append(messages, openai.SystemMessage(*m.Content))
 			}
-		case "user":
-			messages = append(messages, r.UserMessageToChatParam(msg))
-		case "assistant":
-			messages = append(messages, r.AssistantMessageToChatParam(msg))
-		case "tool":
-			for _, toolCall := range msg.ToolCalls {
+		case *UserMessage:
+			m := message.(*UserMessage)
+			messages = append(messages, r.UserMessageToChatParam(m))
+		case *AssistantMessage:
+			m := message.(*AssistantMessage)
+			ok, mm := r.AssistantMessageToChatParam(m)
+			if ok {
+				messages = append(messages, mm)
+			}
+			for _, toolCall := range m.ToolCalls {
 				messages = append(messages, openai.ToolMessage(toolCall.String(), *toolCall.Id))
 			}
 		}
@@ -159,7 +164,7 @@ func (r *ProviderOpenai) RequestToMessages(request *Request) []openai.ChatComple
 	return messages
 }
 
-func (r *ProviderOpenai) UserMessageToChatParam(message *Message) openai.ChatCompletionMessageParamUnion {
+func (r *ProviderOpenai) UserMessageToChatParam(message *UserMessage) openai.ChatCompletionMessageParamUnion {
 	if message == nil {
 		return openai.UserMessage("")
 	}
@@ -205,17 +210,16 @@ func (r *ProviderOpenai) UserMessageToChatParam(message *Message) openai.ChatCom
 	return openai.UserMessage(content)
 }
 
-func (r *ProviderOpenai) AssistantMessageToChatParam(message *Message) openai.ChatCompletionMessageParamUnion {
+func (r *ProviderOpenai) AssistantMessageToChatParam(message *AssistantMessage) (bool, openai.ChatCompletionMessageParamUnion) {
 	if message == nil {
-		return openai.AssistantMessage("")
+		return false, openai.ChatCompletionMessageParamUnion{}
 	}
 
-	content := ""
-	if message.Content != nil {
-		content = *message.Content
+	if message.Content == nil || *message.Content == "" {
+		return false, openai.ChatCompletionMessageParamUnion{}
 	}
 
-	return openai.AssistantMessage(content)
+	return true, openai.AssistantMessage(*message.Content)
 }
 
 func (r *ProviderOpenai) ChatCompletionToResponse(completion *openai.ChatCompletion) *Response {
@@ -229,9 +233,10 @@ func (r *ProviderOpenai) ChatCompletionToResponse(completion *openai.ChatComplet
 		Model:        completion.Model,
 		FinishReason: choice.FinishReason,
 		Message:      r.ChatCompletionMessageToMessage(choice.Message),
+		TotalUsage:   nil,
 	}
 
-	response.Usage = &Usage{
+	response.Message.Usage = &Usage{
 		InputTokens:  &completion.Usage.PromptTokens,
 		OutputTokens: &completion.Usage.CompletionTokens,
 		CachedTokens: &completion.Usage.PromptTokensDetails.CachedTokens,
@@ -240,13 +245,8 @@ func (r *ProviderOpenai) ChatCompletionToResponse(completion *openai.ChatComplet
 	return response
 }
 
-func (r *ProviderOpenai) ChatCompletionMessageToMessage(message openai.ChatCompletionMessage) *Message {
-	result := new(Message)
-
-	if message.Role != "" {
-		role := string(message.Role)
-		result.Role = (*Role)(&role)
-	}
+func (r *ProviderOpenai) ChatCompletionMessageToMessage(message openai.ChatCompletionMessage) *AssistantMessage {
+	result := new(AssistantMessage)
 
 	if message.Content != "" {
 		result.Content = &message.Content

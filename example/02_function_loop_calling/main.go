@@ -81,9 +81,8 @@ func main() {
 	functionCall.AddDeclaration(checkNumberDeclaration)
 
 	// * create state with initial messages
-	state := function.NewState([]*call.Message{
-		{
-			Role:    gut.Ptr(call.RoleUser),
+	state := function.NewState([]call.Message{
+		&call.UserMessage{
 			Content: gut.Ptr("Please get the magic number 2 times, then use them to check for correctness. Use the provided functions. End task when checking is success."),
 		},
 	})

@@ -32,13 +32,11 @@ func TestOpenaiCaller(t *testing.T) {
 			MaxTokens:       &maxTokens,
 			Temperature:     &temperature,
 			ReasoningEffort: gut.Ptr(ReasoningEffortLow),
-			Messages: []*Message{
-				{
-					Role:    gut.Ptr(RoleSystem),
+			Messages: []Message{
+				&SystemMessage{
 					Content: gut.Ptr("You are a helpful assistant."),
 				},
-				{
-					Role:    gut.Ptr(RoleUser),
+				&UserMessage{
 					Content: gut.Ptr("Hello, how are you?"),
 				},
 			},
@@ -71,9 +69,8 @@ func TestOpenaiCaller(t *testing.T) {
 		request := &Request{
 			Model:     &visionModel,
 			MaxTokens: &maxTokens,
-			Messages: []*Message{
-				{
-					Role:    gut.Ptr(RoleUser),
+			Messages: []Message{
+				&UserMessage{
 					Content: gut.Ptr("What do you see in this image?"),
 					Image:   buf.Bytes(),
 				},
@@ -96,9 +93,8 @@ func TestOpenaiCaller(t *testing.T) {
 		request := &Request{
 			Model:     &model,
 			MaxTokens: &maxTokens,
-			Messages: []*Message{
-				{
-					Role:    gut.Ptr(RoleUser),
+			Messages: []Message{
+				&UserMessage{
 					Content: gut.Ptr("What's current weather in New York?"),
 				},
 			},
@@ -150,9 +146,8 @@ func TestOpenaiCaller(t *testing.T) {
 		request := &Request{
 			Model:     &model,
 			MaxTokens: &maxTokens,
-			Messages: []*Message{
-				{
-					Role:    gut.Ptr(RoleUser),
+			Messages: []Message{
+				&UserMessage{
 					Content: gut.Ptr("Generate information about a person named John who is 30 years old, lives in New York, and has an active status. Return in format: " + string(schema)),
 				},
 			},

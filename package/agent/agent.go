@@ -13,7 +13,7 @@ type Agent struct {
 	Option    *Option                 `json:"option"`
 	Functions []*function.Declaration `json:"functions"`
 	Subagents []*Agent                `json:"subagents"`
-	Messages  []*call.Message         `json:"messages"`
+	Messages  []call.Message          `json:"messages"`
 }
 
 func New(caller call.Caller, option *Option) *Agent {
@@ -22,7 +22,7 @@ func New(caller call.Caller, option *Option) *Agent {
 		Option:    option,
 		Functions: make([]*function.Declaration, 0),
 		Subagents: make([]*Agent, 0),
-		Messages:  make([]*call.Message, 0),
+		Messages:  make([]call.Message, 0),
 	}
 }
 

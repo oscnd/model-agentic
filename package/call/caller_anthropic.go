@@ -128,22 +128,25 @@ func (r *ProviderAnthropic) RequestToMessageParams(request *Request, option *Opt
 func (r *ProviderAnthropic) RequestToMessages(request *Request) []anthropic.MessageParam {
 	var messages []anthropic.MessageParam
 
-	for _, msg := range request.Messages {
-		if msg == nil || msg.Role == nil {
+	for _, message := range request.Messages {
+		if message == nil {
 			continue
 		}
 
-		switch *msg.Role {
-		case "system":
+		switch message.(type) {
+		case *SystemMessage:
 			// * system messages are handled at the top level in anthropic
 			continue
-		case "user":
-			messages = append(messages, r.UserMessageToMessageParam(msg))
-		case "assistant":
-			messages = append(messages, r.AssistantMessageToMessageParam(msg))
-		case "tool":
-			// * tool results are added as user messages in anthropic
-			for _, toolCall := range msg.ToolCalls {
+		case *UserMessage:
+			m := message.(*UserMessage)
+			messages = append(messages, r.UserMessageToMessageParam(m))
+		case *AssistantMessage:
+			m := message.(*AssistantMessage)
+			ok, mm := r.AssistantMessageToMessageParam(m)
+			if ok {
+				messages = append(messages, mm)
+			}
+			for _, toolCall := range m.ToolCalls {
 				toolResultBlock := anthropic.NewToolResultBlock(*toolCall.Id, toolCall.String(), false)
 				messages = append(messages, anthropic.NewUserMessage(toolResultBlock))
 			}
@@ -153,7 +156,7 @@ func (r *ProviderAnthropic) RequestToMessages(request *Request) []anthropic.Mess
 	return messages
 }
 
-func (r *ProviderAnthropic) UserMessageToMessageParam(message *Message) anthropic.MessageParam {
+func (r *ProviderAnthropic) UserMessageToMessageParam(message *UserMessage) anthropic.MessageParam {
 	if message == nil {
 		return anthropic.NewUserMessage(anthropic.NewTextBlock(""))
 	}
@@ -194,9 +197,9 @@ func (r *ProviderAnthropic) UserMessageToMessageParam(message *Message) anthropi
 	return anthropic.NewUserMessage(anthropic.NewTextBlock(content))
 }
 
-func (r *ProviderAnthropic) AssistantMessageToMessageParam(message *Message) anthropic.MessageParam {
+func (r *ProviderAnthropic) AssistantMessageToMessageParam(message *AssistantMessage) (bool, anthropic.MessageParam) {
 	if message == nil {
-		return anthropic.NewAssistantMessage(anthropic.NewTextBlock(""))
+		return false, anthropic.MessageParam{}
 	}
 
 	var contentBlocks []anthropic.ContentBlockParamUnion
@@ -216,7 +219,7 @@ func (r *ProviderAnthropic) AssistantMessageToMessageParam(message *Message) ant
 		}
 	}
 
-	return anthropic.NewAssistantMessage(contentBlocks...)
+	return true, anthropic.NewAssistantMessage(contentBlocks...)
 }
 
 func (r *ProviderAnthropic) ToolCallToToolUseBlock(toolCall *ToolCall) anthropic.ContentBlockParamUnion {
@@ -250,25 +253,14 @@ func (r *ProviderAnthropic) MessageToResponse(message *anthropic.Message, output
 		Message:      r.MessageContentToMessage(message, output),
 	}
 
-	response.Usage = &Usage{
-		InputTokens:  &message.Usage.InputTokens,
-		OutputTokens: &message.Usage.OutputTokens,
-		CachedTokens: gut.Ptr(message.Usage.CacheCreationInputTokens + message.Usage.CacheReadInputTokens),
-	}
-
 	return response
 }
 
-func (r *ProviderAnthropic) MessageContentToMessage(message *anthropic.Message, output any) *Message {
-	role := "assistant"
-	result := &Message{
-		Role:        (*Role)(&role),
-		Content:     nil,
-		Image:       nil,
-		ImageUrl:    nil,
-		ImageDetail: nil,
-		ToolCalls:   nil,
-		Usage:       nil,
+func (r *ProviderAnthropic) MessageContentToMessage(message *anthropic.Message, output any) *AssistantMessage {
+	result := &AssistantMessage{
+		Content:   nil,
+		ToolCalls: nil,
+		Usage:     nil,
 	}
 
 	var content string
@@ -299,6 +291,13 @@ func (r *ProviderAnthropic) MessageContentToMessage(message *anthropic.Message, 
 	// * set tool calls
 	if len(toolCalls) > 0 {
 		result.ToolCalls = toolCalls
+	}
+
+	// * set usage
+	result.Usage = &Usage{
+		InputTokens:  &message.Usage.InputTokens,
+		OutputTokens: &message.Usage.OutputTokens,
+		CachedTokens: gut.Ptr(message.Usage.CacheCreationInputTokens + message.Usage.CacheReadInputTokens),
 	}
 
 	return result

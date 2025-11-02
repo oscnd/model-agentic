@@ -9,6 +9,6 @@ type Request struct {
 	TopP            *float64         `json:"topP,omitempty"`
 	TopK            *int             `json:"topK,omitempty"`
 	ReasoningEffort *ReasoningEffort `json:"reasoningEffort,omitempty"`
-	Messages        []*Message       `json:"messages,omitempty"`
+	Messages        []Message        `json:"messages,omitempty"`
 	Tools           []*Tool          `json:"tools,omitempty"`
 }

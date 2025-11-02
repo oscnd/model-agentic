@@ -1,7 +1,6 @@
 package agent
 
 import (
-	"github.com/bsthun/gut"
 	"go.scnd.dev/open/model/agentic/package/call"
 	"go.scnd.dev/open/model/agentic/package/function"
 )
@@ -15,28 +14,19 @@ type State struct {
 // NewState creates a new agent state with the specified task and initial messages
 func (r *Agent) NewState(task *string) *State {
 	// * construct messages
-	messages := make([]*call.Message, 0)
+	messages := make([]call.Message, 0)
 
 	// * create system message
-	systemMessage := &call.Message{
-		Role:        gut.Ptr(call.RoleSystem),
-		Content:     r.Option.Persona,
-		Image:       nil,
-		ImageUrl:    nil,
-		ImageDetail: nil,
-		ToolCalls:   nil,
-		Usage:       nil,
+	systemMessage := &call.SystemMessage{
+		Content: r.Option.Persona,
 	}
 
 	// * create user message
-	userMessage := &call.Message{
-		Role:        gut.Ptr(call.RoleUser),
+	userMessage := &call.UserMessage{
 		Content:     task,
 		Image:       nil,
 		ImageUrl:    nil,
 		ImageDetail: nil,
-		ToolCalls:   nil,
-		Usage:       nil,
 	}
 
 	messages = append(messages, systemMessage, userMessage)

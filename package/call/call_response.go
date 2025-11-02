@@ -2,11 +2,11 @@ package call
 
 // Response represents the response from a call to a language model or agent
 type Response struct {
-	Id           string   `json:"id,omitempty"`
-	Model        string   `json:"model"`
-	FinishReason string   `json:"finishReason"`
-	Message      *Message `json:"message"`
-	Usage        *Usage   `json:"usage,omitempty"`
+	Id           string            `json:"id,omitempty"`
+	Model        string            `json:"model"`
+	FinishReason string            `json:"finishReason"`
+	Message      *AssistantMessage `json:"message"`
+	TotalUsage   *Usage            `json:"totalUsage,omitempty"`
 }
 
 // Usage represents token usage information in a call response
