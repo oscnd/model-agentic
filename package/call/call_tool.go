@@ -1,6 +1,8 @@
 package call
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // Tool represents a tool information attached to a request for model to choose to use
 type Tool struct {
@@ -18,8 +20,12 @@ type ToolCall struct {
 	Name      *string `json:"name,omitempty"`
 	Arguments []byte  `json:"arguments,omitempty"`
 	Result    []byte  `json:"output,omitempty"`
+	Error     *string `json:"error,omitempty"`
 }
 
 func (r *ToolCall) String() string {
+	if r.Error != nil {
+		return fmt.Sprintf("Name: %s, Request: %s, Error: %s", *r.Name, r.Arguments, *r.Error)
+	}
 	return fmt.Sprintf("Name: %s, Request: %s, Response: %s", *r.Name, r.Arguments, r.Result)
 }

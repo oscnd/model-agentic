@@ -4,6 +4,7 @@ package function
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/bsthun/gut"
 	"go.scnd.dev/open/model/agentic/package/call"
@@ -92,9 +93,10 @@ func (r *Call) Call(state *State, output any) (*call.Response, *gut.ErrorInstanc
 			// * find matching declaration
 			declaration := r.GetDeclaration(toolCall.Name)
 			if declaration == nil {
-				toolCall.Result, _ = json.Marshal(map[string]any{
-					"error": "declaration not found for tool: " + gut.Val(toolCall.Name),
-				})
+				if r.Option.ParseErrorBreak != nil && *r.Option.ParseErrorBreak {
+					return nil, gut.Err(false, "declaration not found for tool: "+gut.Val(toolCall.Name), nil)
+				}
+				toolCall.Error = gut.Ptr("declaration not found for tool: " + gut.Val(toolCall.Name))
 				toolCalls = append(toolCalls, toolCall)
 				continue
 			}
@@ -102,10 +104,9 @@ func (r *Call) Call(state *State, output any) (*call.Response, *gut.ErrorInstanc
 			// * unmarshal arguments from json
 			var arguments map[string]any
 			if err := json.Unmarshal(toolCall.Arguments, &arguments); err != nil {
-				toolCall.Result, _ = json.Marshal(map[string]any{
-					"error": "failed to unmarshal arguments: " + err.Error(),
-				})
-				toolCalls = append(toolCalls, toolCall)
+				if r.Option.ParseErrorBreak != nil && *r.Option.ParseErrorBreak {
+					return nil, gut.Err(false, fmt.Sprintf("failed to unmarshal arguments for tool %s: %s", gut.Val(toolCall.Name), err.Error()), err)
+				}
 				continue
 			}
 
@@ -128,9 +129,7 @@ func (r *Call) Call(state *State, output any) (*call.Response, *gut.ErrorInstanc
 			// * execute function to get response
 			functionResponse, funcErr := declaration.Func(arguments)
 			if funcErr != nil {
-				toolCall.Result, _ = json.Marshal(map[string]any{
-					"error": funcErr.Error(),
-				})
+				toolCall.Error = gut.Ptr("function execution error: " + funcErr.Error())
 				toolCalls = append(toolCalls, toolCall)
 				continue
 			}
@@ -152,9 +151,10 @@ func (r *Call) Call(state *State, output any) (*call.Response, *gut.ErrorInstanc
 			// * marshal response to json
 			responseJson, err := json.Marshal(functionResponse)
 			if err != nil {
-				toolCall.Result, _ = json.Marshal(map[string]any{
-					"error": "failed to marshal function response: " + err.Error(),
-				})
+				if r.Option.ParseErrorBreak != nil && *r.Option.ParseErrorBreak {
+					return nil, gut.Err(false, fmt.Sprintf("failed to marshal response for tool %s: %s", gut.Val(toolCall.Name), err.Error()), err)
+				}
+				toolCall.Error = gut.Ptr("failed to marshal response: " + err.Error())
 				toolCalls = append(toolCalls, toolCall)
 				continue
 			}
@@ -170,13 +170,32 @@ func (r *Call) Call(state *State, output any) (*call.Response, *gut.ErrorInstanc
 			Usage:     response.Message.Usage,
 		}
 
-		// * append result message
-		state.ToolMessages = append(state.ToolMessages, toolMessage)
+		// * compact error messages
+		if len(toolMessage.ToolCalls) == 1 &&
+			len(state.ToolMessages) > 0 &&
+			r.Option.ParseErrorCompact != nil &&
+			*r.Option.ParseErrorCompact {
+			for i := len(state.ToolMessages) - 1; i >= 0; i-- {
+				tm := state.ToolMessages[i]
+				if len(tm.ToolCalls) == 1 && tm.ToolCalls[0].Error != nil {
+					if toolMessage.ToolCalls[0].Name == tm.ToolCalls[0].Name {
+						// * remove previous error message
+						state.ToolMessages = append(state.ToolMessages[:i], state.ToolMessages[i+1:]...)
+					}
+					break
+				}
+			}
+		}
+
+		// * call callback
 		if state.OnToolMessage != nil {
 			if err := state.OnToolMessage(toolMessage); err != nil {
 				return nil, err
 			}
 		}
+
+		// * append tool message to state
+		state.ToolMessages = append(state.ToolMessages, toolMessage)
 	}
 }
 
