@@ -3,18 +3,37 @@ package function
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	"github.com/mark3labs/mcp-go/client"
+	"github.com/mark3labs/mcp-go/client/transport"
 	"github.com/mark3labs/mcp-go/mcp"
 	"go.scnd.dev/open/model/agentic/package/call"
 )
 
+type McpOption struct {
+	BaseUrl    string
+	Header     map[string]string
+	HttpClient *http.Client
+}
+
 // McpDeclarations fetches function declarations from an MCP server
-func McpDeclarations(url string) ([]*Declaration, error) {
+func McpDeclarations(option *McpOption) ([]*Declaration, error) {
 	ctx := context.Background()
 
 	// * create mcp client
-	mcpClient, err := client.NewStreamableHttpClient(url)
+	if option == nil || option.BaseUrl == "" {
+		return nil, fmt.Errorf("mcp option or base url is empty")
+	}
+
+	mcpOptions := make([]transport.StreamableHTTPCOption, 0)
+	if option.Header != nil {
+		mcpOptions = append(mcpOptions, transport.WithHTTPHeaders(option.Header))
+	}
+	if option.HttpClient != nil {
+		mcpOptions = append(mcpOptions, transport.WithHTTPBasicClient(option.HttpClient))
+	}
+	mcpClient, err := client.NewStreamableHttpClient(option.BaseUrl, mcpOptions...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create mcp client: %w", err)
 	}

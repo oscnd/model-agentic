@@ -13,8 +13,11 @@ import (
 func TestMcpDeclarations(t *testing.T) {
 	t.Run("FetchDeclarationsFromMcpServer", func(t *testing.T) {
 		// * fetch declarations from mcp server
-		mcpUrl := "http://localhost:3300/mcp"
-		declarations, err := McpDeclarations(mcpUrl)
+		declarations, err := McpDeclarations(&McpOption{
+			BaseUrl:    "http://localhost:3300/mcp",
+			Header:     nil,
+			HttpClient: nil,
+		})
 
 		// * assert no error
 		assert.Nil(t, err)
@@ -51,7 +54,11 @@ func TestMcpDeclarations(t *testing.T) {
 
 		// * fetch declarations from mcp server
 		mcpUrl := "http://localhost:3300/mcp"
-		declarations, err := McpDeclarations(mcpUrl)
+		declarations, err := McpDeclarations(&McpOption{
+			BaseUrl:    mcpUrl,
+			Header:     nil,
+			HttpClient: nil,
+		})
 		assert.Nil(t, err)
 		assert.NotNil(t, declarations)
 		assert.Greater(t, len(declarations), 0, "should have at least one declaration")
