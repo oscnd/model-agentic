@@ -21,11 +21,12 @@ type McpOption struct {
 func McpDeclarations(option *McpOption) ([]*Declaration, error) {
 	ctx := context.Background()
 
-	// * create mcp client
+	// * validate option
 	if option == nil || option.BaseUrl == "" {
 		return nil, fmt.Errorf("mcp option or base url is empty")
 	}
 
+	// * create mcp client
 	mcpOptions := make([]transport.StreamableHTTPCOption, 0)
 	if option.Header != nil {
 		mcpOptions = append(mcpOptions, transport.WithHTTPHeaders(option.Header))

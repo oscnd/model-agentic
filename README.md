@@ -36,11 +36,11 @@ func main() {
 	}
 
 	request := &call.Request{
-		Model:     gut.Ptr(os.Getenv("OPENAI_MODEL")),
-		MaxTokens: gut.Ptr(1024),
-		Messages: []*call.Message{
-			{
-				Role:    gut.Ptr("user"),
+		Model:           gut.Ptr(os.Getenv("OPENAI_MODEL")),
+		MaxTokens:       gut.Ptr(1024),
+		ReasoningEffort: gut.Ptr(call.ReasoningEffortLow),
+		Messages: []call.Message{
+			&call.UserMessage{
 				Content: gut.Ptr("Generate information about a person named John who is 30 years old, lives in Thai."),
 			},
 		},
@@ -62,6 +62,8 @@ func main() {
 }
 
 ```
+
+See [example directory](./example) for more usage examples.
 
 ## Test
 
