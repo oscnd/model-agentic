@@ -43,34 +43,30 @@ func (r *McpClient) Execute(args map[string]any) (map[string]any, *gut.ErrorInst
 	}
 
 	// * convert tool result to response
-	var result []byte
+	var result map[string]any
 	if len(toolResult.Content) > 0 {
-		// * handle mcp content types
+		// * select content
 		content := toolResult.Content[0]
+
 		if textContent, ok := mcp.AsTextContent(content); ok {
-			result = []byte(textContent.Text)
-		} else {
-			// * fallback to json marshal
-			bytes, err := json.Marshal(content)
-			if err != nil {
-				return nil, gut.Err(false, fmt.Sprintf("failed to marshal content: %v", err))
+			// * fallback for empty result
+			if len(textContent.Text) == 0 {
+				return map[string]any{
+					"success": true,
+				}, nil
 			}
-			result = bytes
+
+			// * unmarshal text content
+			if err := json.Unmarshal([]byte(textContent.Text), &result); err != nil {
+				// * fallback to raw text
+				result = map[string]any{
+					"r": textContent.Text,
+				}
+			}
+		} else {
+			return nil, gut.Err(false, "unsupported mcp content type", nil)
 		}
 	}
 
-	// * return result as map
-	if len(result) == 0 {
-		return map[string]any{
-			"success": true,
-		}, nil
-	}
-
-	var resultMap map[string]any
-	err = json.Unmarshal(result, &resultMap)
-	if err != nil {
-		return nil, gut.Err(false, fmt.Sprintf("failed to unmarshal tool result: %v", err))
-	}
-
-	return resultMap, nil
+	return result, nil
 }
