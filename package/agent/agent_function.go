@@ -41,7 +41,9 @@ func (r *Agent) Function(state *State) *function.Declaration {
 						agent.ContextPush(*m.Content)
 					case *call.AssistantMessage:
 						m := message.(*call.AssistantMessage)
-						agent.ContextPush(*m.Content)
+						if m.Content != nil {
+							agent.ContextPush(*m.Content)
+						}
 						for _, toolCall := range m.ToolCalls {
 							agent.ContextPush(toolCall.String())
 						}
