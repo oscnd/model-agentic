@@ -5,6 +5,7 @@ package function
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
 
 	"github.com/bsthun/gut"
 	"go.scnd.dev/open/model/agentic/package/call"
@@ -42,13 +43,14 @@ func (r *Call) AddDeclaration(declaration *Declaration) {
 func (r *Call) Call(state *State, output any) (*call.Response, *gut.ErrorInstance) {
 	// * convert function request to call request by appending function declarations as tools
 	callRequest := &call.Request{
-		Model:       r.Option.Model,
-		MaxTokens:   r.Option.MaxTokens,
-		Temperature: r.Option.Temperature,
-		TopP:        r.Option.TopP,
-		TopK:        r.Option.TopK,
-		Messages:    nil,
-		Tools:       r.Tools(),
+		Model:           r.Option.Model,
+		MaxTokens:       r.Option.MaxTokens,
+		Temperature:     r.Option.Temperature,
+		TopP:            r.Option.TopP,
+		TopK:            r.Option.TopK,
+		ReasoningEffort: r.Option.ReasoningEffort,
+		Messages:        nil,
+		Tools:           r.Tools(),
 	}
 
 	// * loop until no more tool calls
@@ -102,19 +104,27 @@ func (r *Call) Call(state *State, output any) (*call.Response, *gut.ErrorInstanc
 			}
 
 			// * unmarshal arguments from json
-			var arguments map[string]any
-			if err := json.Unmarshal(toolCall.Arguments, &arguments); err != nil {
-				if r.Option.ParseErrorBreak != nil && *r.Option.ParseErrorBreak {
-					return nil, gut.Err(false, fmt.Sprintf("failed to unmarshal arguments for tool %s: %s", gut.Val(toolCall.Name), err.Error()), err)
+			elem := reflect.TypeOf(declaration.Arguments).Elem()
+			for elem.Kind() == reflect.Ptr {
+				elem = elem.Elem()
+			}
+			arguments := reflect.New(elem).Interface()
+			if elem.Kind() != reflect.Interface {
+				if err := json.Unmarshal(toolCall.Arguments, arguments); err != nil {
+					if r.Option.ParseErrorBreak != nil && *r.Option.ParseErrorBreak {
+						return nil, gut.Err(false, fmt.Sprintf("failed to unmarshal arguments for tool %s: %s", gut.Val(toolCall.Name), err.Error()), err)
+					}
+					toolCall.Error = gut.Ptr("failed to unmarshal arguments: " + err.Error())
+					toolCalls = append(toolCalls, toolCall)
+					continue
 				}
-				continue
 			}
 
 			// * invoke callback before execution with response as nil
 			callback := &CallbackBeforeFunctionCall{
 				ToolCallId:  toolCall.Id,
 				Declaration: declaration,
-				Argument:    arguments,
+				Arguments:   arguments,
 			}
 			if state.OnBeforeFunctionCall != nil {
 				alter, err := state.OnBeforeFunctionCall(callback)
@@ -129,6 +139,9 @@ func (r *Call) Call(state *State, output any) (*call.Response, *gut.ErrorInstanc
 			// * execute function to get response
 			functionResponse, funcErr := declaration.Func(arguments)
 			if funcErr != nil {
+				if r.Option.ParseErrorBreak != nil && *r.Option.ParseErrorBreak {
+					return nil, gut.Err(false, "function execution error for tool "+gut.Val(toolCall.Name)+": "+funcErr.Error(), funcErr)
+				}
 				toolCall.Error = gut.Ptr("function execution error: " + funcErr.Error())
 				toolCalls = append(toolCalls, toolCall)
 				continue
@@ -207,7 +220,7 @@ func (r *Call) Tools() []*call.Tool {
 			Type:        gut.Ptr("function"),
 			Name:        declaration.Name,
 			Description: declaration.Description,
-			InputSchema: declaration.Argument,
+			InputSchema: declaration.ArgumentsSchema,
 		}
 		tools = append(tools, tool)
 	}

@@ -25,14 +25,14 @@ func NewMcpClient(r client.MCPClient, toolName *string) *McpClient {
 }
 
 // Execute calls the MCP tool with the provided arguments
-func (r *McpClient) Execute(args map[string]any) (map[string]any, *gut.ErrorInstance) {
+func (r *McpClient) Execute(arguments any) (map[string]any, *gut.ErrorInstance) {
 	ctx := context.Background()
 
 	// * create mcp call tool request
 	callRequest := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name:      *r.toolName,
-			Arguments: args,
+			Arguments: arguments,
 		},
 	}
 

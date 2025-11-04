@@ -90,10 +90,11 @@ func McpDeclarations(option *McpOption) ([]*Declaration, error) {
 		wrapper := NewMcpClient(mcpClient, &tool.Name)
 
 		declaration := &Declaration{
-			Name:        &tool.Name,
-			Description: &tool.Description,
-			Argument:    schema,
-			Func:        wrapper.Execute,
+			Name:            &tool.Name,
+			Description:     &tool.Description,
+			Arguments:       new(map[string]any),
+			ArgumentsSchema: schema,
+			Func:            wrapper.Execute,
 		}
 		declarations = append(declarations, declaration)
 	}

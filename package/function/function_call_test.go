@@ -32,28 +32,26 @@ func TestCallMagicNumber(t *testing.T) {
 		numbers := make([]int, 0)
 
 		// * create get_magic_number function
-		getMagicNumberDeclaration := &Declaration{
-			Name:        gut.Ptr("get_magic_number"),
-			Description: gut.Ptr("Get a random magic number between 1 and 100"),
-			Argument:    nil,
-			Func: func(args map[string]any) (map[string]any, *gut.ErrorInstance) {
+		getMagicNumberDeclaration := NewDeclaration(
+			gut.Ptr("get_magic_number"),
+			gut.Ptr("Get a random magic number between 1 and 100"),
+			func(arguments any) (map[string]any, *gut.ErrorInstance) {
 				numbers = append(numbers, gut.Rand.Intn(100)+1)
 				return map[string]any{
 					"number": numbers[len(numbers)-1],
 				}, nil
 			},
-		}
+		)
 
 		// * create check_number function
-		checkNumberDeclaration := &Declaration{
-			Name:        gut.Ptr("check_number"),
-			Description: gut.Ptr("Check if the provided number matches the magic number"),
-			Argument: call.SchemaConvert(new(struct {
-				Numbers []int `json:"numbers" description:"The number to check"`
-			})),
-			Func: func(args map[string]any) (map[string]any, *gut.ErrorInstance) {
-				inputNumbers := args["numbers"].([]any)
-				if len(numbers) < 2 {
+		type CheckNumberArguments struct {
+			Numbers []*int `json:"numbers" description:"The number to check"`
+		}
+		checkNumberDeclaration := NewDeclaration(
+			gut.Ptr("check_number"),
+			gut.Ptr("Check if the provided number matches the magic number"),
+			func(arguments *CheckNumberArguments) (map[string]any, *gut.ErrorInstance) {
+				if len(arguments.Numbers) < 2 {
 					return map[string]any{
 						"correct": false,
 						"message": "Not enough magic numbers retrieved",
@@ -61,8 +59,8 @@ func TestCallMagicNumber(t *testing.T) {
 				}
 
 				parsedNumbers := make([]int, 0)
-				for _, n := range inputNumbers {
-					parsedNumbers = append(parsedNumbers, int(n.(float64)))
+				for _, n := range arguments.Numbers {
+					parsedNumbers = append(parsedNumbers, *n)
 				}
 
 				slices.Sort(parsedNumbers)
@@ -79,7 +77,7 @@ func TestCallMagicNumber(t *testing.T) {
 					"correct": true,
 				}, nil
 			},
-		}
+		)
 
 		// * add functions
 		functionCall.AddDeclaration(getMagicNumberDeclaration)
@@ -96,7 +94,7 @@ func TestCallMagicNumber(t *testing.T) {
 		var invocations []*CallbackBeforeFunctionCall
 		var afterInvocations []*CallbackAfterFunctionCall
 
-		state.OnBeforeFunctionCall = func(callback *CallbackBeforeFunctionCall) (map[string]any, *gut.ErrorInstance) {
+		state.OnBeforeFunctionCall = func(callback *CallbackBeforeFunctionCall) (any, *gut.ErrorInstance) {
 			invocations = append(invocations, callback)
 			return nil, nil
 		}

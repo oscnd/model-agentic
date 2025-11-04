@@ -39,7 +39,7 @@ func main() {
 	webSearchDeclaration := &function.Declaration{
 		Name:        gut.Ptr("web_search"),
 		Description: gut.Ptr("Search the web for information about a specific topic"),
-		Argument: call.SchemaConvert(new(struct {
+		Arguments: call.SchemaConvert(new(struct {
 			Query string `json:"query" description:"The search query" validate:"required"`
 		})),
 		Func: func(arguments map[string]any) (map[string]any, *gut.ErrorInstance) {
@@ -92,7 +92,7 @@ func main() {
 	formatContentDeclaration := &function.Declaration{
 		Name:        gut.Ptr("format_content"),
 		Description: gut.Ptr("Format content into a structured document"),
-		Argument: call.SchemaConvert(new(struct {
+		Arguments: call.SchemaConvert(new(struct {
 			Content string `json:"content" description:"The content to format" validate:"required"`
 			Format  string `json:"format" description:"The desired format (markdown, paragraph, bullet)" validate:"required"`
 		})),

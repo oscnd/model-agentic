@@ -57,7 +57,7 @@ func main() {
 	var beforeInvocations []*function.CallbackBeforeFunctionCall
 	var afterInvocations []*function.CallbackAfterFunctionCall
 
-	state.OnBeforeFunctionCall = func(callback *function.CallbackBeforeFunctionCall) (map[string]any, *gut.ErrorInstance) {
+	state.OnBeforeFunctionCall = func(callback *function.CallbackBeforeFunctionCall) (any, *gut.ErrorInstance) {
 		beforeInvocations = append(beforeInvocations, callback)
 		return nil, nil
 	}

@@ -1,9 +1,9 @@
 package function
 
 type CallbackBeforeFunctionCall struct {
-	ToolCallId  *string        `json:"toolCallId"`
-	Declaration *Declaration   `json:"declaration"`
-	Argument    map[string]any `json:"argument"`
+	ToolCallId  *string      `json:"toolCallId"`
+	Declaration *Declaration `json:"declaration"`
+	Arguments   any          `json:"arguments"`
 }
 
 type CallbackAfterFunctionCall struct {

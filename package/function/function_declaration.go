@@ -6,12 +6,38 @@ import (
 )
 
 // DeclarationFunc defines the function signature for function implementations
-type DeclarationFunc func(args map[string]any) (map[string]any, *gut.ErrorInstance)
+type DeclarationFunc func(arguments any) (map[string]any, *gut.ErrorInstance)
 
 // Declaration represents a function declaration with metadata and implementation
 type Declaration struct {
-	Name        *string         `json:"name"`
-	Description *string         `json:"description"`
-	Argument    *call.Schema    `json:"parameters"`
-	Func        DeclarationFunc `json:"-"`
+	Name            *string         `json:"name"`
+	Description     *string         `json:"description"`
+	Arguments       any             `json:"arguments"`
+	ArgumentsSchema *call.Schema    `json:"-"`
+	Func            DeclarationFunc `json:"-"`
+}
+
+func NewDeclaration[T any](
+	name *string,
+	description *string,
+	function func(arguments T) (map[string]any, *gut.ErrorInstance),
+) *Declaration {
+	return &Declaration{
+		Name:            name,
+		Description:     description,
+		Arguments:       new(T),
+		ArgumentsSchema: call.SchemaConvert(new(T)),
+		Func: func(arguments any) (map[string]any, *gut.ErrorInstance) {
+			if arguments == nil {
+				return function(*new(T))
+			}
+
+			parsed, ok := arguments.(T)
+			if !ok {
+				return nil, gut.Err(false, "invalid argument type")
+			}
+
+			return function(parsed)
+		},
+	}
 }

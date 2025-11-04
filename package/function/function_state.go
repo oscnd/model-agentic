@@ -5,7 +5,7 @@ import (
 	"go.scnd.dev/open/model/agentic/package/call"
 )
 
-type StateOnBeforeFunctionCall func(callback *CallbackBeforeFunctionCall) (map[string]any, *gut.ErrorInstance)
+type StateOnBeforeFunctionCall func(callback *CallbackBeforeFunctionCall) (any, *gut.ErrorInstance)
 
 type StateOnAfterFunctionCall func(callback *CallbackAfterFunctionCall) (map[string]any, *gut.ErrorInstance)
 

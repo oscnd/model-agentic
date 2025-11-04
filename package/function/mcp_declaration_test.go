@@ -28,7 +28,7 @@ func TestMcpDeclarations(t *testing.T) {
 		for _, declaration := range declarations {
 			assert.NotNil(t, declaration.Name)
 			assert.NotNil(t, declaration.Description)
-			assert.NotNil(t, declaration.Argument)
+			assert.NotNil(t, declaration.Arguments)
 			assert.NotNil(t, declaration.Func)
 		}
 	})
@@ -40,11 +40,10 @@ func TestMcpDeclarations(t *testing.T) {
 		maxTokens := 500
 		temperature := 0.7
 		option := &Option{
-			Model:       &model,
-			MaxTokens:   &maxTokens,
-			Temperature: &temperature,
-			TopP:        nil,
-			TopK:        nil,
+			Model:           &model,
+			MaxTokens:       &maxTokens,
+			Temperature:     &temperature,
+			ReasoningEffort: gut.Ptr(call.ReasoningEffortLow),
 			CallOption: &call.Option{
 				SchemaName:        nil,
 				SchemaDescription: nil,
@@ -79,7 +78,7 @@ func TestMcpDeclarations(t *testing.T) {
 		var invocations []*CallbackBeforeFunctionCall
 		var finalResponse string
 
-		state.OnBeforeFunctionCall = func(callback *CallbackBeforeFunctionCall) (map[string]any, *gut.ErrorInstance) {
+		state.OnBeforeFunctionCall = func(callback *CallbackBeforeFunctionCall) (any, *gut.ErrorInstance) {
 			invocations = append(invocations, callback)
 			return nil, nil
 		}
