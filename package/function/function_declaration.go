@@ -20,7 +20,7 @@ type Declaration struct {
 func NewDeclaration[T any](
 	name *string,
 	description *string,
-	function func(arguments T) (map[string]any, *gut.ErrorInstance),
+	function func(arguments *T) (map[string]any, *gut.ErrorInstance),
 ) *Declaration {
 	return &Declaration{
 		Name:            name,
@@ -29,10 +29,10 @@ func NewDeclaration[T any](
 		ArgumentsSchema: call.SchemaConvert(new(T)),
 		Func: func(arguments any) (map[string]any, *gut.ErrorInstance) {
 			if arguments == nil {
-				return function(*new(T))
+				return function(new(T))
 			}
 
-			parsed, ok := arguments.(T)
+			parsed, ok := arguments.(*T)
 			if !ok {
 				return nil, gut.Err(false, "invalid argument type")
 			}
