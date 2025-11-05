@@ -18,10 +18,11 @@ func main() {
 
 	// * create function call option
 	option := &function.Option{
-		Model:       &model,
-		MaxTokens:   &maxTokens,
-		Temperature: &temperature,
-		CallOption:  new(call.Option),
+		Model:             &model,
+		MaxTokens:         &maxTokens,
+		Temperature:       &temperature,
+		CallOption:        new(call.Option),
+		ParseErrorCompact: gut.Ptr(true),
 	}
 
 	// * create function call instance

@@ -30,9 +30,10 @@ func main() {
 		SubagentDispatchPrompt: nil,
 		SubagentDispatchLimit:  nil,
 		FunctionOption: &function.Option{
-			Model:       &model,
-			MaxTokens:   gut.Ptr(1000),
-			Temperature: gut.Ptr(0.7),
+			Model:             &model,
+			MaxTokens:         gut.Ptr(1000),
+			Temperature:       gut.Ptr(0.7),
+			ParseErrorCompact: gut.Ptr(true),
 			CallOption: &call.Option{
 				SchemaName:        gut.Ptr("research_agent_call"),
 				SchemaDescription: gut.Ptr("Call schema for research agent"),
@@ -82,10 +83,11 @@ func main() {
 		SubagentDispatchPrompt: nil,
 		SubagentDispatchLimit:  nil,
 		FunctionOption: &function.Option{
-			Model:       &model,
-			MaxTokens:   gut.Ptr(1500),
-			Temperature: gut.Ptr(0.8),
-			CallOption:  new(call.Option),
+			Model:             &model,
+			MaxTokens:         gut.Ptr(1500),
+			Temperature:       gut.Ptr(0.8),
+			ParseErrorCompact: gut.Ptr(true),
+			CallOption:        new(call.Option),
 		},
 	})
 
