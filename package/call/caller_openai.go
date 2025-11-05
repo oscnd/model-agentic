@@ -109,8 +109,8 @@ func (r *ProviderOpenai) RequestToChatParams(request *Request, option *Option, o
 	}
 
 	// * set extra fields from option
-	if option.ExtraFields != nil {
-		chatParams.SetExtraFields(option.ExtraFields)
+	if request.ExtraFields != nil {
+		chatParams.SetExtraFields(request.ExtraFields)
 	}
 
 	// * set output format if output schema is provided

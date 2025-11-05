@@ -113,8 +113,8 @@ func (r *ProviderAnthropic) RequestToMessageParams(request *Request, option *Opt
 	}
 
 	// * set extra fields from option
-	if option.ExtraFields != nil {
-		messageParams.SetExtraFields(option.ExtraFields)
+	if request.ExtraFields != nil {
+		messageParams.SetExtraFields(request.ExtraFields)
 	}
 
 	// * set response format if output is provided
