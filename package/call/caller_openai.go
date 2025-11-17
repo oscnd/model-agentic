@@ -10,6 +10,7 @@ import (
 	"github.com/bsthun/gut"
 	"github.com/openai/openai-go"
 	"github.com/openai/openai-go/option"
+	"github.com/openai/openai-go/packages/respjson"
 	"github.com/openai/openai-go/shared"
 )
 
@@ -36,28 +37,118 @@ func (r *ProviderOpenai) Call(request *Request, option *Option, output any) (*Re
 	// * convert request to openai chat parameters
 	chatParams := r.RequestToChatParams(request, option, output)
 
-	// * call openai api with retry logic
-	maxRetries := 3
-	var chatCompletion *openai.ChatCompletion
-	var err error
+	// * initialize completion struct
+	completion := &openai.ChatCompletion{
+		ID:      "completion-" + *gut.Random(gut.RandomSet.MixedAlphaNum, 12),
+		Model:   chatParams.Model,
+		Created: time.Now().Unix(),
+		Choices: []openai.ChatCompletionChoice{
+			{
+				Index: 0,
+				Message: openai.ChatCompletionMessage{
+					Role:    "assistant",
+					Content: "",
+				},
+				FinishReason: "",
+			},
+		},
+		Usage: openai.CompletionUsage{},
+	}
 
-	for i := 0; i < maxRetries; i++ {
-		chatCompletion, err = r.Client.Chat.Completions.New(context.Background(), chatParams)
-		if err == nil {
-			break
+	// * call openai streaming api
+	stream := r.Client.Chat.Completions.NewStreaming(context.Background(), chatParams)
+	for stream.Next() {
+		chunk := stream.Current()
+
+		// * update model
+		if chunk.Model != "" {
+			completion.Model = chunk.Model
 		}
-		if i < maxRetries-1 {
-			gut.Debug("openai retry %d due to error: %s", i+1, err)
-			time.Sleep(time.Duration(i+1) * time.Second)
+
+		// * update usage
+		if chunk.Usage.PromptTokens > 0 || chunk.Usage.CompletionTokens > 0 {
+			completion.Usage = chunk.Usage
+		}
+
+		// * process choices
+		for _, choice := range chunk.Choices {
+			// * find existing choice by index
+			for int64(len(completion.Choices)) <= choice.Index {
+				completion.Choices = append(completion.Choices, openai.ChatCompletionChoice{
+					Index: int64(len(completion.Choices)),
+					Message: openai.ChatCompletionMessage{
+						Role: "assistant",
+					},
+				})
+			}
+
+			// * accumulate content
+			if choice.Delta.Content != "" {
+				completion.Choices[choice.Index].Message.Content += choice.Delta.Content
+			}
+
+			// * accumulate tool calls
+			for _, toolCallDelta := range choice.Delta.ToolCalls {
+				toolCallIndex := int(toolCallDelta.Index)
+
+				// * ensure toolCalls array has enough elements
+				for len(completion.Choices[choice.Index].Message.ToolCalls) <= toolCallIndex {
+					completion.Choices[choice.Index].Message.ToolCalls = append(completion.Choices[choice.Index].Message.ToolCalls, openai.ChatCompletionMessageToolCall{
+						Type:     "function",
+						Function: openai.ChatCompletionMessageToolCallFunction{},
+					})
+				}
+
+				// * update tool call id
+				if toolCallDelta.ID != "" {
+					completion.Choices[choice.Index].Message.ToolCalls[toolCallIndex].ID = toolCallDelta.ID
+				}
+
+				// * update function name
+				if toolCallDelta.Function.Name != "" {
+					completion.Choices[choice.Index].Message.ToolCalls[toolCallIndex].Function.Name = toolCallDelta.Function.Name
+				}
+
+				// * accumulate function arguments
+				if toolCallDelta.Function.Arguments != "" {
+					completion.Choices[choice.Index].Message.ToolCalls[toolCallIndex].Function.Arguments += toolCallDelta.Function.Arguments
+				}
+			}
+
+			// * capture finish reason
+			if choice.FinishReason != "" {
+				completion.Choices[choice.Index].FinishReason = choice.FinishReason
+			}
+
+			// * accumulate extra fields
+			if choice.Delta.JSON.ExtraFields != nil {
+				if completion.Choices[choice.Index].JSON.ExtraFields == nil {
+					completion.Choices[choice.Index].JSON.ExtraFields = make(map[string]respjson.Field)
+				}
+				for k, v := range choice.Delta.JSON.ExtraFields {
+					var val string
+					if err := json.Unmarshal([]byte(v.Raw()), &val); err != nil {
+						continue
+					}
+					val = completion.Choices[choice.Index].JSON.ExtraFields[k].Raw() + val
+					completion.Choices[choice.Index].JSON.ExtraFields[k] = respjson.NewField(val)
+				}
+			}
+		}
+
+		if option.OnResponse != nil {
+			response := r.ChatCompletionToResponse(completion)
+			option.OnResponse(response)
 		}
 	}
 
-	if err != nil {
-		return nil, gut.Err(false, fmt.Sprintf("failed to call openai after %d retries", maxRetries), err)
+	// * check for streaming errors
+	if err := stream.Err(); err != nil {
+		return nil, gut.Err(false, fmt.Sprintf("openai streaming failed: %s", err), err)
 	}
 
-	// * convert openai response to internal format
-	response := r.ChatCompletionToResponse(chatCompletion)
+	// * convert completion to internal format
+	response := r.ChatCompletionToResponse(completion)
 	if response == nil {
 		return nil, gut.Err(false, "invalid response from openai", nil)
 	}
@@ -105,6 +196,7 @@ func (r *ProviderOpenai) RequestToChatParams(request *Request, option *Option, o
 
 	// * set tools if provided
 	if len(request.Tools) > 0 {
+		chatParams.ParallelToolCalls = openai.Bool(true)
 		chatParams.Tools = r.RequestToTools(request.Tools)
 	}
 
@@ -234,12 +326,22 @@ func (r *ProviderOpenai) ChatCompletionToResponse(completion *openai.ChatComplet
 		FinishReason: choice.FinishReason,
 		Message:      r.ChatCompletionMessageToMessage(choice.Message),
 		TotalUsage:   nil,
+		ExtraFields:  nil,
 	}
 
 	response.Message.Usage = &Usage{
 		InputTokens:  &completion.Usage.PromptTokens,
 		OutputTokens: &completion.Usage.CompletionTokens,
 		CachedTokens: &completion.Usage.PromptTokensDetails.CachedTokens,
+	}
+
+	if choice.JSON.ExtraFields != nil {
+		response.ExtraFields = make(map[string]string)
+		for k, v := range choice.JSON.ExtraFields {
+			if v.Valid() {
+				response.ExtraFields[k] = v.Raw()
+			}
+		}
 	}
 
 	return response

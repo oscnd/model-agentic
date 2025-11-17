@@ -109,6 +109,9 @@ func TestCallMagicNumber(t *testing.T) {
 
 		// * assert no error
 		assert.Nil(t, err)
+		if err != nil {
+			t.Errorf("function call failed: %v", err)
+		}
 		assert.NotNil(t, response)
 
 		// * assert both functions were called

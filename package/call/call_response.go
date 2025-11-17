@@ -7,6 +7,7 @@ type Response struct {
 	FinishReason string            `json:"finishReason"`
 	Message      *AssistantMessage `json:"message"`
 	TotalUsage   *Usage            `json:"totalUsage,omitempty"`
+	ExtraFields  map[string]string `json:"extraFields,omitempty"`
 }
 
 // Usage represents token usage information in a call response

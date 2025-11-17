@@ -72,7 +72,10 @@ func SchemaConvertFromType(typ reflect.Type) *Schema {
 // SchemaConvertStructType converts a struct type to a Schema representation.
 func SchemaConvertStructType(typ reflect.Type) *Schema {
 	if typ == reflect.TypeOf(struct{}{}) {
-		return &Schema{Type: gut.Ptr("object")}
+		return &Schema{
+			Type:       gut.Ptr("object"),
+			Properties: make(map[string]*Schema),
+		}
 	}
 
 	// * get struct description from tag if available
