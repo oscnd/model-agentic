@@ -37,7 +37,7 @@ func main() {
 	}
 
 	// * get mcp declarations
-	declarations, err := function.McpDeclarations(mcpOption)
+	declarations, err := function.McpDeclarations(gut.Ptr("modelcontextprotocol.io"), mcpOption)
 	if err != nil {
 		gut.Fatal("failed to fetch mcp declarations", err)
 	} else {

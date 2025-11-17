@@ -12,6 +12,7 @@ type DeclarationFunc func(arguments any) (map[string]any, *gut.ErrorInstance)
 type Declaration struct {
 	Name            *string         `json:"name"`
 	Description     *string         `json:"description"`
+	Source          *string         `json:"source"`
 	Arguments       any             `json:"arguments"`
 	ArgumentsSchema *call.Schema    `json:"-"`
 	Func            DeclarationFunc `json:"-"`
@@ -25,6 +26,7 @@ func NewDeclaration[T any](
 	return &Declaration{
 		Name:            name,
 		Description:     description,
+		Source:          nil,
 		Arguments:       new(T),
 		ArgumentsSchema: call.SchemaConvert(new(T)),
 		Func: func(arguments any) (map[string]any, *gut.ErrorInstance) {

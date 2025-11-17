@@ -18,7 +18,7 @@ type McpOption struct {
 }
 
 // McpDeclarations fetches function declarations from an MCP server
-func McpDeclarations(option *McpOption) ([]*Declaration, error) {
+func McpDeclarations(source *string, option *McpOption) ([]*Declaration, error) {
 	ctx := context.Background()
 
 	// * validate option
@@ -92,6 +92,7 @@ func McpDeclarations(option *McpOption) ([]*Declaration, error) {
 		declaration := &Declaration{
 			Name:            &tool.Name,
 			Description:     &tool.Description,
+			Source:          source,
 			Arguments:       new(map[string]any),
 			ArgumentsSchema: schema,
 			Func:            wrapper.Execute,
