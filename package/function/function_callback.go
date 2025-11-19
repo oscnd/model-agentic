@@ -9,4 +9,5 @@ type CallbackBeforeFunctionCall struct {
 type CallbackAfterFunctionCall struct {
 	CallbackBeforeFunctionCall
 	Result map[string]any `json:"result"`
+	Error  *string        `json:"error,omitempty"`
 }

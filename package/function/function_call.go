@@ -80,10 +80,12 @@ func (r *Call) Call(state *State, output any) (*call.Response, *gut.ErrorInstanc
 				if !ok {
 					continue
 				}
-
-				*response.TotalUsage.InputTokens += *m.Usage.InputTokens
-				*response.TotalUsage.OutputTokens += *m.Usage.OutputTokens
-				*response.TotalUsage.CachedTokens += *m.Usage.CachedTokens
+				if m.Usage == nil {
+					continue
+				}
+				*response.TotalUsage.InputTokens += gut.Val(m.Usage.InputTokens)
+				*response.TotalUsage.OutputTokens += gut.Val(m.Usage.OutputTokens)
+				*response.TotalUsage.CachedTokens += gut.Val(m.Usage.CachedTokens)
 			}
 
 			return response, nil
@@ -144,6 +146,21 @@ func (r *Call) Call(state *State, output any) (*call.Response, *gut.ErrorInstanc
 				}
 				toolCall.Error = gut.Ptr("function execution error: " + funcErr.Error())
 				toolCalls = append(toolCalls, toolCall)
+
+				if state.OnAfterFunctionCall != nil {
+					alter, err := state.OnAfterFunctionCall(&CallbackAfterFunctionCall{
+						CallbackBeforeFunctionCall: *callback,
+						Result:                     nil,
+						Error:                      toolCall.Error,
+					})
+					if alter != nil {
+						functionResponse = alter
+					}
+					if err != nil {
+						return nil, err
+					}
+				}
+
 				continue
 			}
 
@@ -152,6 +169,7 @@ func (r *Call) Call(state *State, output any) (*call.Response, *gut.ErrorInstanc
 				alter, err := state.OnAfterFunctionCall(&CallbackAfterFunctionCall{
 					CallbackBeforeFunctionCall: *callback,
 					Result:                     functionResponse,
+					Error:                      nil,
 				})
 				if alter != nil {
 					functionResponse = alter
