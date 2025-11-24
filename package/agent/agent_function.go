@@ -13,7 +13,7 @@ func (r *Agent) Function(state *State) *function.Declaration {
 		IncludeContext *bool   `json:"includeContext" description:"Whether to include the parent agent's context to subagent" validate:"required"`
 	}
 
-	return function.NewDeclaration(
+	declaration := function.NewDeclaration(
 		gut.Ptr("call_"+*r.Option.Name),
 		r.Option.Description,
 		func(arguments *Arguments) (map[string]any, *gut.ErrorInstance) {
@@ -60,4 +60,10 @@ func (r *Agent) Function(state *State) *function.Declaration {
 			}, nil
 		},
 	)
+
+	if r.Option.Terminator != nil && *r.Option.Terminator {
+		declaration.Terminator = r.Option.Terminator
+	}
+
+	return declaration
 }

@@ -13,6 +13,7 @@ type Declaration struct {
 	Name            *string         `json:"name"`
 	Description     *string         `json:"description"`
 	Source          *string         `json:"source"`
+	Terminator      *bool           `json:"terminator"` // TODO: Add terminator support
 	Arguments       any             `json:"arguments"`
 	ArgumentsSchema *call.Schema    `json:"-"`
 	Func            DeclarationFunc `json:"-"`

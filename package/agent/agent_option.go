@@ -12,5 +12,6 @@ type Option struct {
 	AllowSubagentDispatch  *bool            `json:"allowSubagentDispatch"`
 	SubagentDispatchPrompt *string          `json:"subagentDispatchPrompt"`
 	SubagentDispatchLimit  *int             `json:"subagentDispatchLimit"`
+	Terminator             *bool            `json:"terminator"`
 	FunctionOption         *function.Option `json:"functionOption"`
 }
