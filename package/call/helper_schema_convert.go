@@ -42,8 +42,9 @@ func SchemaConvertFromType(typ reflect.Type) *Schema {
 	// * handle maps
 	if typ.Kind() == reflect.Map {
 		return &Schema{
-			Type:       gut.Ptr("object"),
-			Properties: make(map[string]*Schema),
+			Type:                 gut.Ptr("object"),
+			Properties:           make(map[string]*Schema),
+			AdditionalProperties: gut.Ptr(false),
 		}
 	}
 
@@ -73,8 +74,9 @@ func SchemaConvertFromType(typ reflect.Type) *Schema {
 func SchemaConvertStructType(typ reflect.Type) *Schema {
 	if typ == reflect.TypeOf(struct{}{}) {
 		return &Schema{
-			Type:       gut.Ptr("object"),
-			Properties: make(map[string]*Schema),
+			Type:                 gut.Ptr("object"),
+			Properties:           make(map[string]*Schema),
+			AdditionalProperties: gut.Ptr(false),
 		}
 	}
 
@@ -89,8 +91,9 @@ func SchemaConvertStructType(typ reflect.Type) *Schema {
 	}
 
 	schema := &Schema{
-		Type:       gut.Ptr("object"),
-		Properties: make(map[string]*Schema),
+		Type:                 gut.Ptr("object"),
+		Properties:           make(map[string]*Schema),
+		AdditionalProperties: gut.Ptr(false),
 	}
 
 	if schemaDescription != "" {

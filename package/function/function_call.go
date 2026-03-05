@@ -111,7 +111,7 @@ func (r *Call) Call(state *State, output any) (*call.Response, *gut.ErrorInstanc
 				elem = elem.Elem()
 			}
 			arguments := reflect.New(elem).Interface()
-			if elem.Kind() != reflect.Interface {
+			if len(toolCall.Arguments) > 0 && elem.Kind() != reflect.Interface {
 				if err := json.Unmarshal(toolCall.Arguments, arguments); err != nil {
 					if r.Option.ParseErrorBreak != nil && *r.Option.ParseErrorBreak {
 						return nil, gut.Err(false, fmt.Sprintf("failed to unmarshal arguments for tool %s: %s", gut.Val(toolCall.Name), err.Error()), err)
